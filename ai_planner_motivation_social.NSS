@@ -15,6 +15,7 @@
 #include "inc_ai_planner_worldstate"
 #include "inc_ai_planner_motivations_limit"
 #include "inc_ai_planner_motivation_social"
+#include "inc_ai_planner_motivation_combat"
 
 
 int UpdateWorldState_Social( object oNPC ) {

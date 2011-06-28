@@ -64,4 +64,3 @@ int SetLastGoalValue( object oNPC, float fValue ) {
 	//
 	return TRUE;
 }
-

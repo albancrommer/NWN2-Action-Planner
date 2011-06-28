@@ -4,6 +4,8 @@
 */
 // Alban 1008
 
+#include "ginc_debug" 
+
 int MotivationsLimitValid( object oNPC ){
 
 	if( MOTIVATIONS_LIMIT_VAL > GetLocalFloat( oNPC, MOTIVATIONS_LIMIT_VAR ) ){

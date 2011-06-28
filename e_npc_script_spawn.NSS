@@ -11,12 +11,21 @@
 
 void main()
 {
-	//
+
 	object oNPC = OBJECT_SELF;
-	//
-	InitNPC( oNPC );
-	//
 	
-//	// PrettyDebug( "Fatigue : " + FloatToString( GetFatigue(oNPC) ) );
-//	// PrettyDebug( "Hunger  : " + FloatToString( GetHunger(oNPC) ) );
+	// initializes NPC variables - think fatigue, hunger, etc.
+	InitNPC( oNPC );
+
+	
+	// if a FORCED COMBAT Waypoint is around, creature is tagged to enter combat planning
+	//
+	object oWP = GetNearestObjectByTag( WP_FORCED_COMBAT, oNPC );
+	if( GetIsObjectValid( oWP ) ){
+		float fDist = GetLocalFloat( oWP, VAR_FORCED_COMBAT_DIST );
+		float fDistBet = GetDistanceBetween( oWP, oNPC );
+		if( fDistBet < fDist ){
+			SetLocalInt( oNPC, VAR_FORCED_COMBAT, 1 );
+		}
+	}
 }

@@ -1,0 +1,13 @@
+2DA V2.0
+
+    0    1    2    3    4    5    6    7    8    9    
+0    ****    "72:dt_ho06_to_ext"    "0:"    "20:dt_ho06_to_ext"    "72:dt_ho06_to_ext"    "72:dt_ho06_to_ext"    "72:dt_ho06_to_ext"    "0:"    "72:dt_ho06_to_ext"    "72:dt_ho06_to_ext"    
+1    "72:dt_ho04_to_ext"    ****    "0:"    "20:dt_ho04_to_ext"    "72:dt_ho04_to_ext"    "72:dt_ho04_to_ext"    "72:dt_ho04_to_ext"    "0:"    "72:dt_ho04_to_ext"    "72:dt_ho04_to_ext"    
+2    "72:dt_ho01_to_ext"    "72:dt_ho01_to_ext"    ****    "20:dt_ho01_to_ext"    "72:dt_ho01_to_ext"    "72:dt_ho01_to_ext"    "72:dt_ho01_to_ext"    "0:"    "72:dt_ho01_to_ext"    "72:dt_ho01_to_ext"    
+3    "20:dt_ext_to_ho06"    "20:dt_ext_to_ho04"    "0:"    ****    "20:dt_ext_to_ho03"    "20:dt_ext_to_ho08"    "20:dt_ext_to_ho01"    "0:"    "20:dt_ext_to_ho07"    "20:dt_ext_to_ho05"    
+4    "72:dt_ho03_to_ext"    "72:dt_ho03_to_ext"    "0:"    "20:dt_ho03_to_ext"    ****    "72:dt_ho03_to_ext"    "72:dt_ho03_to_ext"    "0:"    "72:dt_ho03_to_ext"    "72:dt_ho03_to_ext"    
+5    "72:dt_ho08_to_ext"    "72:dt_ho08_to_ext"    "0:"    "20:dt_ho08_to_ext"    "72:dt_ho08_to_ext"    ****    "72:dt_ho08_to_ext"    "0:"    "72:dt_ho08_to_ext"    "72:dt_ho08_to_ext"    
+6    "72:do_ho02_to_ext"    "72:do_ho02_to_ext"    "0:"    "20:do_ho02_to_ext"    "72:do_ho02_to_ext"    "72:do_ho02_to_ext"    ****    "0:"    "72:do_ho02_to_ext"    "72:do_ho02_to_ext"    
+7    "0:"    "0:"    "0:"    "0:"    "0:"    "0:"    "0:"    ****    "0:"    "0:"    
+8    "72:dt_ho07_to_ext"    "72:dt_ho07_to_ext"    "0:"    "20:dt_ho07_to_ext"    "72:dt_ho07_to_ext"    "72:dt_ho07_to_ext"    "72:dt_ho07_to_ext"    "0:"    ****    "72:dt_ho07_to_ext"    
+9    "72:dt_ho05_to_ext"    "72:dt_ho05_to_ext"    "0:"    "20:dt_ho05_to_ext"    "72:dt_ho05_to_ext"    "72:dt_ho05_to_ext"    "72:dt_ho05_to_ext"    "0:"    "72:dt_ho05_to_ext"    ****    

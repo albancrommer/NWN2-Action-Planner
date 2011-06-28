@@ -299,7 +299,8 @@ void main() {
 		}
 	
 	}
-// PrettyDebug("I'm Fleeing from " + GetName( oTarget ) );
+	if( !GetIsObjectValid( oTarget ) ) 	return; // There might be no PC to flee from. Causes DIVIDE BY ZERO if removed
+ PrettyDebug("I'm Escaping from " + GetName( oTarget ) );
 	CheckNearbyDoors( oNPC );
 	ActionFlee( oNPC, oTarget );
 /*	 

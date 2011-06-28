@@ -1,0 +1,12 @@
+2DA V2.0
+
+                     Id     Preconditions     Effects     Actions
+ 0      TASK_STEP_AWAY          can_move   step_away   step_away
+ 1         TASK_ESCAPE          can_move      escape      escape
+ 2          TASK_STAND              none       stand       stand
+ 3           TASK_FLEE          can_move        flee        flee
+ 4           TASK_GOTO          can_move near_object near_object
+ 5            TASK_EAT  near_object:food  not_hungry         eat
+ 6          TASK_SLEEP   near_object:bed   not_tired       sleep
+ 7           TASK_IDLE              none        idle        idle
+ 8         TASK_COMBAT          can_move      combat      combat

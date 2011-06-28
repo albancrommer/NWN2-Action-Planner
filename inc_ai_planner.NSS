@@ -3,6 +3,7 @@
 
 	TODO : Write functions doc + "How to use and mod" ? 
 	
+	Stopped at: 110627 inject combat layer
 	
 */
 // Alban
@@ -23,7 +24,7 @@
 // Prototypes
 // **************************************************************************
 
-// GetWorldState performs both environment and creature self check to update a local world state memory (LWSM)
+// GetWorldState performs both environment and creature self check to update a Local World State Memory (LWSM)
 int UpdateWorldState( object oNPC );
 
 // GetMotivation affects goals values using the LWSM to determine the values of motivations 
@@ -45,7 +46,7 @@ void UpdateWorldState( object oNPC ){
 	
 //	UpdateWorldState_Performances( oNPC );
 	//
-//	UpdateWorldState_Brigad( oNPC );
+  	UpdateWorldState_Combat( oNPC );
 	//
 	UpdateWorldState_Social( oNPC );
 	//
@@ -55,6 +56,7 @@ void UpdateWorldState( object oNPC ){
 
 int GetMotivation( object oNPC ){
 
+
 	ResetMotivationsLimit( oNPC );
 /*
 	GetMotivation_Performances( oNPC );
@@ -62,11 +64,11 @@ int GetMotivation( object oNPC ){
 	if( MotivationsLimitValid( oNPC ) ) 
 		
 		GetMotivation_Momentum( oNPC );
-/*	
+	
 	if( MotivationsLimitValid( oNPC ) ) 
 	
-		GetMotivation_Brigad( oNPC );
-*/		
+		GetMotivation_Combat( oNPC );
+		
 	if( MotivationsLimitValid( oNPC ) ) 
 	
 		GetMotivation_Social( oNPC );
@@ -89,11 +91,13 @@ int GetMotivation( object oNPC ){
 // GetPlan recursively searches for an adequate set of tasks
 int GetPlan( object oNPC ){
 
+
 	int bValid, bSolved, bConditions = FALSE;
 	//
 	string sConditions, sEffects, sTask;
 	//
 	SortStorageFloat( oNPC, GOALS_ARRAY );
+
 	//
 	float fGoalValue 		= GetHighestGoalValue( oNPC );
 	//
@@ -101,7 +105,7 @@ int GetPlan( object oNPC ){
 	//
 	while( FALSE == bSolved ){
 		//
-// PrettyDebug( "?? "+ObjectToString( oNPC )+ " Searching with Goal : "+sGoal );
+ //PrettyDebug( "?? "+ObjectToString( oNPC )+ " Searching with Goal : "+sGoal );
 		if( INVALID 		== sGoal ) { // No more reachable goal
 			//
 			bSolved 		= TRUE; 
@@ -113,7 +117,7 @@ int GetPlan( object oNPC ){
 		}
 		//
 		sConditions 		= GetGoalConditions( sGoal );
-// PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal conditions : "+sConditions );
+//PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal conditions : "+sConditions );
 		//
 		if( ! GetConditionsValid( oNPC, sConditions ) ){ // Not a valid goal
 			//
@@ -135,6 +139,7 @@ int GetPlan( object oNPC ){
 		//
 		} else { 
 			//
+//PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal failed for effects : "+sEffects );
 			sGoal = GetHighestGoal( oNPC );// Look for another goal
 		// 
 		}
@@ -147,6 +152,6 @@ int GetPlan( object oNPC ){
 	//
 	SetLastGoalValue( oNPC, fGoalValue );
 	//
-// PrettyDebug( "?? "+ObjectToString( oNPC )+ " Plan Solved !  " + sGoal );
+ //PrettyDebug( "?? "+ObjectToString( oNPC )+ " Plan Solved !  " + sGoal );
 	return TRUE;
 }

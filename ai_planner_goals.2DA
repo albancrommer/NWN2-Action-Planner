@@ -1,0 +1,11 @@
+2DA V2.0
+
+                     Id             Preconditions     Effects
+ 0      GOAL_STEP_AWAY                  can_move   step_away
+ 1         GOAL_ESCAPE      in_danger,can_escape      escape
+ 2          GOAL_STAND                 no_danger       stand
+ 3           GOAL_FLEE                 in_danger        flee
+ 4            GOAL_EAT                  has_food  not_hungry
+ 5          GOAL_SLEEP                   has_bed   not_tired
+ 6           GOAL_IDLE                 no_danger        idle
+ 7         GOAL_COMBAT                  can_move      combat

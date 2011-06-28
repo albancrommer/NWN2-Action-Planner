@@ -1,6 +1,7 @@
 
 #include "ginc_debug"
 #include "inc_ai_planner"
+#include "ftpath_library"
 
 
 void main()
@@ -24,5 +25,11 @@ InitTasks();
 //dump( GetStorage( GetCacheObject(), TASKS_STORAGE ) );
 
 
+	// This is the standard NWN2 Module on load script
+	ExecuteScript("x2_mod_def_load", GetModule() );
+
+	// Build our Areas ID cache for Fast Transarea Pathfinding. YAY!
+	ftp_BuildCache();
+	
 	
 }

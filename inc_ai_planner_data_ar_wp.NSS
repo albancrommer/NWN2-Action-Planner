@@ -18,7 +18,12 @@ const string MODULE_NPCID_COUNT 	= "MODULE_NPCID_COUNT";
 // TODO : Maybe it would be wise to immediately extend the amount of functions to cover every need
 // ie include storage of all data types. Or Overkill?
 
-// Local functions
+
+
+
+// **************************************************************
+// Unique identifiers
+// **************************************************************
 
 
 string GetObjectUniqueId( object oObject ) {
@@ -43,6 +48,13 @@ string GetObjectUniqueId( object oObject ) {
 
 }
 
+// PWs might want to modify this for local ID recognition 
+// for now it uses a function from inc_ai_planner_data_ar_wp
+string GetCreatureUniqueId( object oCreature, int nType = PLAYER_CHAR_IS_PC ) {
+
+	return GetObjectUniqueId( oCreature );
+
+}
 
 
 
@@ -178,15 +190,15 @@ float GetStorageFloatAtIndex( object oObject, string sArrayId, int nIndex ) {
 string GetStorageLastValueString( object oObject, string sArrayId ){
 
 	object oA 			= GetStorage( oObject, sArrayId );
-	//	
-	if( !GetIsObjectValid( oA ) ) return INVALID;
-	//
-	int nLast 			= GetVariableCount( oA ) - 1 ;
-	//
+	if( !GetIsObjectValid( oA ) ) 
+		return INVALID;
+	int nCount			= GetVariableCount( oA );
+	if( nCount == 0 ) 
+		return INVALID;
+	int nLast 			=  - 1 ;
 	string sVar 		= GetVariableValueString( oA, nLast );
-	//
-	if( "@" == sVar ) 	return INVALID; // empty array
-	// 
+	if( "@" == sVar ) 	
+		return INVALID; // empty array
 	return sVar;
 
 }
@@ -277,6 +289,7 @@ string GetStorageVarNameAtIndex( object oObject, string sArrayId, int nIndex ) {
 
 
 // Performs an ASC sort on object variables with tag sArray
+// works directly on storage, much like with a pointer 
 int SortStorageFloat( object oObject, string sArrayId ){
 
 	int nSorted = FALSE;
@@ -330,7 +343,10 @@ int UpdateStorageFloat( object oObject, string sArrayId, string sVar, float fVal
 
 	object oA 			= GetStorage( oObject, sArrayId );
 	//	
-	if( ! GetIsObjectValid( oA ) ) return FALSE;
+	if( ! GetIsObjectValid( oA ) ) {
+		PrettyDebug( "UpdateStorageFloat::Invalid object"); 
+		return FALSE;
+	}
 	fValue				= GetLocalFloat( oA, sVar ) + fValue;
 	//
 	SetLocalFloat( oA, sVar, fValue );

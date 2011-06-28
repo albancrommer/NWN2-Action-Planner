@@ -13,8 +13,8 @@ void main()
 	object oNPC			= OBJECT_SELF;
 	//
 	object oC			= GetLastAttacker();
-	//
-	if( ! GetNotifyPCInterractionRequestValid( oNPC, oC ) ) return;
+
+		if( ! GetNotifyPCInterractionRequestValid( oNPC, oC ) ) return;
 	
 	object oWP 			= GetInteractionWaypointNearest( oNPC );
 	//

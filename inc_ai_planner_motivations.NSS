@@ -9,4 +9,6 @@
 #include "ai_planner_motivation_mom"
 #include "ai_planner_motivation_self"
 #include "ai_planner_motivation_social"
+#include "ai_planner_motivation_combat"
 #include "inc_ai_planner_motivations_limit"
+

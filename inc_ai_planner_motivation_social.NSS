@@ -63,17 +63,6 @@ const int  R_WATCH							= 0x00000100; // 256
 const int  R_CLAP							= 0x00000010; // 16
 const int  R_ADORE							= 0x00000001; // 1
 
-// **************************************************************
-// Unique identifiers
-// **************************************************************
-
-// PWs might want to modify this for local ID recognition 
-// for now it uses a function from inc_ai_planner_data_ar_wp
-string GetCreatureUniqueId( object oCreature, int nType = PLAYER_CHAR_IS_PC ) {
-
-	return GetObjectUniqueId( oCreature );
-
-}
 
 
 // **************************************************************
@@ -494,7 +483,10 @@ PrettyDebug( "Object Controller : " + GetTag( oController ) );
 int GetReactionTo( object oController, object oNPC ) {
 
 	float fState 			= GetInteractionControllerState( oController );
-// 	PrettyDebug( "fState:"	+ FloatToString( fState ) );
+	
+	if( GetDistanceBetween( oNPC, GetFirstPC()) < 15.0 ){
+		PrettyDebug( "fState:"	+ FloatToString( fState ) ); }
+		
 	if( fState > 25.0 ) 	return R_ESCAPE;
 	if( fState > 5.0 ) 		return R_FLEE;
 	

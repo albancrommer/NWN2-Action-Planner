@@ -1,11 +1,7 @@
-
+// Implementation interface for different data storage
 
 // Canon Functions
 /*
-
-int UpdateStorageFloat( object oNPC, string sArrayId, string sVar, float fValue ){
-
-}
 
 
 */
