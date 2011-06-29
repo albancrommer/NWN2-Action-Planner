@@ -42,7 +42,7 @@ string GetObjectUniqueId( object oObject ) {
 	//
 	SetLocalInt( oModule, MODULE_NPCID_COUNT, nModuleCount );
 	//
-// PrettyDebug( "Assigned Unique Id : " + sUniqueId + " to " + GetTag( oObject ) );
+//PrettyDebug( "Assigned Unique Id : " + sUniqueId + " to " + GetTag( oObject ) );
 
 	return sUniqueId;
 
@@ -102,9 +102,13 @@ int AddToStorageFloat( object oObject, string sArrayId, string sVar, float fValu
 
 	object oA 			= GetStorage( oObject, sArrayId );
 	//
-	if( ! GetIsObjectValid( oA ) ) return FALSE;
-	
+	if( ! GetIsObjectValid( oA ) ) {
+		//PrettyDebug( "AddToStorageFloat::Invalid object" );
+		return FALSE;
+	}
 	SetLocalFloat( oA, sVar, fValue );
+	//PrettyDebug( "AddToStorageFloat::sVar on "+GetTag(oObject)+"-"+sArrayId+":"+sVar+" = "+FloatToString( fValue)   );
+	//PrettyDebug( "AddToStorageFloat::sVar is actually "+FloatToString( GetLocalFloat( oA, sVar ) ) +" on " + GetTag( oA )  );
 	//	
 	return TRUE;
 
@@ -190,15 +194,22 @@ float GetStorageFloatAtIndex( object oObject, string sArrayId, int nIndex ) {
 string GetStorageLastValueString( object oObject, string sArrayId ){
 
 	object oA 			= GetStorage( oObject, sArrayId );
-	if( !GetIsObjectValid( oA ) ) 
+	if( !GetIsObjectValid( oA ) ) {
+		//PrettyDebug( "GetStorageLastValueString:: Invalid storage "+GetTag(oObject)+"-"+sArrayId  );
 		return INVALID;
+	}
 	int nCount			= GetVariableCount( oA );
-	if( nCount == 0 ) 
+	if( nCount == 0 ) {
+		//PrettyDebug( "GetStorageLastValueString:: empty storage "+GetTag(oObject)+"-"+sArrayId  );
 		return INVALID;
-	int nLast 			=  - 1 ;
+	}
+	int nLast 			=  nCount - 1 ;
 	string sVar 		= GetVariableValueString( oA, nLast );
-	if( "@" == sVar ) 	
-		return INVALID; // empty array
+	if( "@" == sVar ) {
+		//PrettyDebug( "GetStorageLastValueString:: empty value "+GetTag(oObject)+"-"+sArrayId  );
+		return INVALID;
+	}
+		//PrettyDebug( "GetStorageLastValueString:: returns "+sVar  );
 	return sVar;
 
 }
@@ -217,15 +228,22 @@ float GetStorageLastValueFloat( object oObject, string sArrayId ){
 string GetStorageLastVarName( object oObject, string sArrayId ) {
 
 	object oA 			= GetStorage( oObject, sArrayId );
-	//
-	if( !GetIsObjectValid( oA ) ) return INVALID;
-	//
-	int nLast 			= GetVariableCount( oA ) - 1 ;
-	//
+	if( !GetIsObjectValid( oA ) ) {
+		//PrettyDebug( "GetStorageLastVarName:: Invalid storage "+GetTag(oObject)+"-"+sArrayId  );
+		return INVALID;
+	}
+	int nCount			= GetVariableCount( oA );
+	if( nCount == 0 ) {
+		//PrettyDebug( "GetStorageLastVarName:: empty storage "+GetTag(oObject)+"-"+sArrayId  );
+		return INVALID;
+	}
+	int nLast 			=  nCount - 1 ;
 	string sVar 		= GetVariableName( oA, nLast );
-	//
-	if( "@" == sVar ) 	return INVALID; // empty array
-	// 
+	if( "@" == sVar ) {
+		//PrettyDebug( "GetStorageLastVarName:: empty value "+GetTag(oObject)+"-"+sArrayId  );
+		return INVALID;
+	}
+	//PrettyDebug( "GetStorageLastVarName:: returns "+sVar  );
 	return sVar;
 
 }
@@ -296,7 +314,7 @@ int SortStorageFloat( object oObject, string sArrayId ){
 	//
 	object oA 			= GetStorage( oObject, sArrayId );
 	//
-// PrettyDebug( "///// Array before sort ///// " );
+//PrettyDebug( "///// Array before sort ///// " );
 // dump( oA);
 	//
 	if( !GetIsObjectValid( oA ) ) return FALSE;
@@ -332,7 +350,7 @@ int SortStorageFloat( object oObject, string sArrayId ){
 		}
 	//
 	}
-// PrettyDebug( "///// Array after sort ///// " );
+//PrettyDebug( "///// Array after sort ///// " );
 // dump( oA);	//
 	return TRUE;
 
@@ -344,7 +362,7 @@ int UpdateStorageFloat( object oObject, string sArrayId, string sVar, float fVal
 	object oA 			= GetStorage( oObject, sArrayId );
 	//	
 	if( ! GetIsObjectValid( oA ) ) {
-		PrettyDebug( "UpdateStorageFloat::Invalid object"); 
+		//PrettyDebug( "UpdateStorageFloat::Invalid object"); 
 		return FALSE;
 	}
 	fValue				= GetLocalFloat( oA, sVar ) + fValue;

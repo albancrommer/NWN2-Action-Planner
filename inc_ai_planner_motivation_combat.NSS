@@ -10,6 +10,7 @@
 #include "inc_ai_planner_datacontroller"
 #include "inc_ai_planner_worldstate"
 #include "inc_ai_planner_motivations_limit"
+#include "km_get_faction"
 
 
 
@@ -24,10 +25,11 @@ float _safeDivide( float fDivident, float fDivisor ){
 	if( fDivisor == 0.0 ) {
 		fDivisor = 0.01;
 	}
-	PrettyDebug( "_safeDivide : " + FloatToString( fDivident ) +":"+FloatToString( fDivisor) );
+	//PrettyDebug( "_safeDivide : " + FloatToString( fDivident ) +":"+FloatToString( fDivisor) );
 	return fDivident / fDivisor;
 	
 }
+
 
 // Throttles the result of f1:f2 to make it under fLimit	
 float CapDivide( float f1, float f2, float fLimit ){
@@ -36,6 +38,100 @@ float CapDivide( float f1, float f2, float fLimit ){
 		return fLimit;
 	return fRes;
 }
+
+
+// Retrieves the faction of an npc
+// You might want to adapt that
+int GetFaction( object oNPC ){
+
+	// Uses Knightmare's function, kudos to him
+	return KnightmareGetFaction( oNPC );
+	
+}
+
+
+// **************************************************************
+// Controller Data : variables
+// **************************************************************
+
+
+// Reads the storage to retrieve the quantity of team members
+int SetTeamCount( object oCombatController ){
+
+	int nTeamCount 		= GetStorageCount( oCombatController, STORAGE_TEAM_MEMBERS );
+	SetLocalInt( oCombatController, VAR_TEAM_COUNT, nTeamCount );
+	PrettyDebug("GetTeamData:: TeamCount : "+IntToString( nTeamCount ) );
+	return nTeamCount;
+}
+
+
+// Reads team count stored on controller
+int GetTeamCount( object oCombatController ){
+
+	return GetLocalInt( oCombatController, VAR_TEAM_COUNT );
+	
+}
+
+
+// Reads the storage to retrieve the quantity of enemy members
+int SetEnemyCount( object oCombatController){
+	
+	int nEnemyCount 		= GetStorageCount( oCombatController, STORAGE_ENEMY_MEMBERS );
+	SetLocalInt( oCombatController, VAR_ENEMY_COUNT, nEnemyCount );
+	return nEnemyCount;
+	
+}
+
+// Reads enemy count stored on controller
+int GetEnemyCount( object oCombatController){
+
+	return GetLocalInt( oCombatController, VAR_ENEMY_COUNT );
+	
+}
+
+
+// Assigns faction to controller
+int SetCombatControllerFaction( object oCombatController, int nFaction ){
+
+	SetLocalInt( oCombatController, VAR_CONTROLLER_FACTION, nFaction );
+	return FALSE;
+
+}
+
+// Retrieves faction for controller
+int GetCombatControllerFaction( object oController ){
+
+	return GetLocalInt( oController, VAR_CONTROLLER_FACTION );
+
+}
+
+// Performs calculations regarding the NPC team :
+// . Team count
+int GetTeamData( object oCombatController ){
+
+	SetTeamCount( oCombatController );
+	return FALSE;
+
+}
+
+// Performs a high level search and sort of enemies data
+// Updates the enemy storage
+int UpdateEnemyScope( object oCombatController ){
+
+	return FALSE;
+	
+}
+
+// Performs calculations regarding the enemy team 
+// . Enemy Count
+int GetEnemyData( object oCombatController ){
+	
+	UpdateEnemyScope( oCombatController );
+	SetEnemyCount( oCombatController );
+	return FALSE;
+
+}
+
 
 // **************************************************************
 // Controller basics : instancing, deleting, adding, removing
@@ -67,7 +163,11 @@ int AddToCombatController( object oCombatController, object oNPC ){
 	// Quit if already added
 	if( oNPC 		== GetStorageObject( oCombatController, STORAGE_TEAM_MEMBERS, sId )  ) 
 		return FALSE;
+		
+	// Add to Storage and update count
 	AddToStorageObject( oCombatController, STORAGE_TEAM_MEMBERS, sId, oNPC );
+	
+	//dump( GetStorage( oCombatController, STORAGE_TEAM_MEMBERS ) );
 	return TRUE;
 
 }
@@ -80,12 +180,17 @@ int RemoveFromCombatController( object oCombatController, object oNPC ){
 
 }
 
+
 // Creates a combat controller at NPC location
 object CreateCombatController( object oNPC ){
 	
 	// New object
 	object oCombatController	= CreateObject( OBJECT_TYPE_PLACEABLE, TAG_COMBAT_CONTROLLER, GetLocation( oNPC ) );
-
+//PrettyDebug( "CreateCombatController::"+GetObjectUniqueId( oCombatController )+" with tag "+ GetTag(oCombatController));
+	
+	int nFaction 				= GetFaction( oNPC );
+	SetCombatControllerFaction( oCombatController, nFaction );
+	
 	// Instanciate storage(s) on Controller
 	GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES );
 	GetStorage( oCombatController, STORAGE_TEAM_MEMBERS );
@@ -94,40 +199,43 @@ object CreateCombatController( object oNPC ){
 	return oCombatController;
 }
 
+// Checks for oNPC compatibility with oCombatController as a team controller
+// we don't want anyone to team up with anyone in most cases
+// Controllers at initiation could receive a set of constraints : subraces, faction etc. 
+int GetIsCombatControllerValid( object oCombatController, object oNPC ){
+
+	
+	return GetCombatControllerFaction( oCombatController ) == GetFaction( oNPC ) ;
+	
+}
 
 // returns or create the combat controller
 object GetCombatControllerProxy( object oNPC ){
 
-	// Use existing controller
-	object oCombatController	= GetNearestObjectByTag( TAG_COMBAT_CONTROLLER, oNPC );
-DebugObjectLocation( oCombatController );	
-	if( GetIsObjectValid( oCombatController ) ) return oCombatController;
+	// Use existing controller if 1. one is near 2. this one is valid
+	int nNth 			= 1;
+	int bSolved			= FALSE;
+	object oCombatController	= GetNearestObjectByTag( TAG_COMBAT_CONTROLLER, oNPC, nNth );
+	while( GetIsObjectValid( oCombatController ) && !bSolved ){
+		if( GetIsCombatControllerValid( oCombatController, oNPC ) ){
+			bSolved		= TRUE;
+		}
+	}
+	
+	
+	//DebugObjectLocation( oCombatController, "blue" );	
+	if( GetIsObjectValid( oCombatController ) ){
+		PrettyDebug( "GetCombatControllerProxy:: found valid controller");
+	 	return oCombatController;
+	}
+	 
 	// Create new controller
 	oCombatController 		= CreateCombatController( oNPC );
-DebugObjectLocation( oCombatController );		
+	//DebugObjectLocation( oCombatController, "green" );		
 	AddToCombatController( oCombatController, oNPC ); 
 	
 	return oCombatController;
 
-}
-
-
-// **************************************************************
-// Controller Data : variables
-// **************************************************************
-
-// Simple accessor to int variable stored on controller
-int GetTeamCount( object oCombatController ){
-
-	return 1;
-	return GetLocalInt( oCombatController, VAR_TEAM_COUNT );
-}
-
-int GetEnemiesCount( object oCombatController){
-	
-	return 0;
-	return GetLocalInt( oCombatController, VAR_ENEMY_COUNT );
-	
 }
 
 
@@ -139,11 +247,12 @@ int GetEnemiesCount( object oCombatController){
 float SetImmediateDanger( object oCombatController){
 
 	float fImmediateDanger;
-	if( GetEnemiesCount( oCombatController ) ){ 
+	if( GetEnemyCount( oCombatController ) ){ 
 		fImmediateDanger		= 1.0 ;
 	}
-	else fImmediateDanger		=0.0 ;
+	else fImmediateDanger		=0.5	 ;
 	SetLocalFloat( oCombatController, VAR_CDATA_DANGER, fImmediateDanger );
+	//PrettyDebug( "func::SetImmediateDanger:"+FloatToString(fImmediateDanger) );
 	return fImmediateDanger;
 
 }
@@ -158,6 +267,7 @@ float SetAreaKnowledge( object oCombatController){
 	int nCurrentPoint 		= GetLocalInt( oCombatController, VAR_COUNT_RECO_POINTS );
 	float fAreaKnowledge    = _safeDivide( IntToFloat( nCurrentPoint ), IntToFloat( nMaxPoints ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_AREA_KNOW, fAreaKnowledge);
+	//PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
 	return fAreaKnowledge;
 	
 }
@@ -170,6 +280,7 @@ float SetTeamMorale( object oCombatController){
 	int nAll 			= GetLocalInt( oCombatController, VAR_COUNT_ALL );
 	float fTeamMorale 	= _safeDivide( IntToFloat( nDead ), IntToFloat( nAll ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_MORALE, fTeamMorale);
+	//PrettyDebug( "func::SetTeamMorale:"+FloatToString(fTeamMorale) );
 	return fTeamMorale;
 	 
 }
@@ -178,7 +289,7 @@ float SetTeamMorale( object oCombatController){
 // Returns the math product of each fraction of team as a fraction is nSubTeam:nTotalTeam
 float GetSubteamsFractions( object oCombatController ){
 
-	return 1.0;
+	return 0.0;
 
 }
 
@@ -189,6 +300,7 @@ float SetPositionQuality( object oCombatController){
 	float fSubteamsFractions	= GetSubteamsFractions( oCombatController );
 	float fPositionQuality = sqrt( fSubteamsFractions );
 	SetLocalFloat( oCombatController, VAR_CDATA_POSITION, fPositionQuality);
+	//PrettyDebug( "func::SetPositionQuality:"+FloatToString(fPositionQuality) );
 	return fPositionQuality;
 }
 
@@ -196,66 +308,73 @@ float SetPositionQuality( object oCombatController){
 // my Rounds To Life is equal to my Hit Points divided by my enemies Damages per round
 float SetEnemyThreat( object oCombatController){
 
+	//PrettyDebug( "func::SetEnemyThreat:"+FloatToString(0.01) );
 	return 0.01;
 	
 }
 
-// Performs calculations regarding the NPC team :
-// . Team count
-int GetTeamData( object oCombatController ){
-
-	return FALSE;
-
-}
-
-
-// Performs calculations regarding the enemy team 
-int GetEnemyData( object oCombatController ){
-
-	return FALSE;
-
-}
 
 // **************************************************************
 // Controller strategies
 // **************************************************************
 
-float GetStrategyAmbush( object oCombatController, float f1, float f2 ){
-
-	return CapDivide( f1, f2, 3.0 );
-
-}
+// fImmediateDanger : fAreaKnowledge
 float GetStrategyExplore( object oCombatController, float f1, float f2 ){
 
-	return CapDivide( f1, f2, 3.0 );
+	float fRes = CapDivide( f1, f2, 3.0 );
+	PrettyDebug( "func::GetStrategyExplore:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
 	
 }
+// fAreaKnowledge, fImmediateDanger
+float GetStrategyAmbush( object oCombatController, float f1, float f2 ){
+
+	float fRes = CapDivide( f1, f2, 3.0 );
+	PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
+}
+
+// fTeamMorale, fEnemyThreat 
 float GetStrategyTaunt( object oCombatController, float f1, float f2 ){
 
-	if( !GetEnemiesCount(oCombatController) ){
+	if( !GetEnemyCount(oCombatController) ){
 		return 0.0;}
-	return CapDivide( f1, f2, 6.0 );
+	float fRes = CapDivide( f1, f2, 6.0 );
+	PrettyDebug( "func::GetStrategyTaunt:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
 	
 }
+
+// fEnemyThreat, fTeamMorale
 float GetStrategyFlee( object oCombatController, float f1, float f2 ){
 
-	if( !GetEnemiesCount(oCombatController) ){
+	if( !GetEnemyCount(oCombatController) ){
 		return 0.0;}
-	return CapDivide( f1, f2, 6.0 );
+	float fRes = CapDivide( f1, f2, 6.0 );
+	PrettyDebug( "func::GetStrategyFlee:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
 	
 }
+
+// fEnemyThreat, fPositionQuality
 float GetStrategyReposition( object oCombatController, float f1, float f2 ){
 
-	if( !GetEnemiesCount(oCombatController) ){
+	if( !GetEnemyCount(oCombatController) ){
 		return 0.0;}
-	return CapDivide( f1, f2, 9.0 );
+	float fRes = CapDivide( f1, f2, 9.0 );
+	PrettyDebug( "func::GetStrategyReposition:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
 	
 }
+
+// fPositionQuality, fEnemyThreat
 float GetStrategyAttack( object oCombatController, float f1, float f2 ){
 
-	if( !GetEnemiesCount(oCombatController) ){
+	if( !GetEnemyCount(oCombatController) ){
 		return 0.0;}
-	return CapDivide( f1, f2, 9.0 );
+	float fRes = CapDivide( f1, f2, 9.0 );
+	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
 	
 }
 
@@ -272,9 +391,10 @@ int RunControllerLoop( object oCombatController ){
 	GetTeamData(oCombatController );
 	
 	// Destroy self if team is empty
-	if( GetLocalInt( oCombatController, VAR_TEAM_COUNT ) < 1 ){
-		DestroyObject(oCombatController);
-	}
+//	if( GetLocalInt( oCombatController, VAR_TEAM_COUNT ) < 1 ){
+//		//PrettyDebug( "RunControllerLoop: destroying Controller" );
+//		DestroyObject(oCombatController);
+//	}
 	
 	// Enemy info. Even with no enemy, the Controller stays up.
 	GetEnemyData(oCombatController );
@@ -288,13 +408,13 @@ int RunControllerLoop( object oCombatController ){
 
 
 	// The highest of these indices determines the Strategy
-	float fIsStrategyAmbush		= GetStrategyAmbush( oCombatController, fAreaKnowledge, fImmediateDanger);
 	float fIsStrategyExplore	= GetStrategyExplore( oCombatController, fImmediateDanger, fAreaKnowledge );
+	float fIsStrategyAmbush		= GetStrategyAmbush( oCombatController, fAreaKnowledge, fImmediateDanger);
 	float fIsStrategyTaunt		= GetStrategyTaunt( oCombatController, fTeamMorale, fEnemyThreat);
 	float fIsStrategyFlee		= GetStrategyFlee( oCombatController, fEnemyThreat, fTeamMorale);
 	float fIsStrategyReposition	= GetStrategyReposition( oCombatController, fEnemyThreat, fPositionQuality);
 	float fIsStrategyAttack		= GetStrategyAttack( oCombatController, fPositionQuality, fEnemyThreat);
-PrettyDebug( "RunControllerLoop : "+FloatToString( fIsStrategyAmbush )+"/"+FloatToString( fIsStrategyExplore )+"/"+FloatToString( fIsStrategyTaunt )+"/"+FloatToString( fIsStrategyFlee )+"/"+FloatToString( fIsStrategyReposition )+"/"+FloatToString( fIsStrategyAttack )+"/");
+	//PrettyDebug( "RunControllerLoop : "+FloatToString( fIsStrategyAmbush )+"/"+FloatToString( fIsStrategyExplore )+"/"+FloatToString( fIsStrategyTaunt )+"/"+FloatToString( fIsStrategyFlee )+"/"+FloatToString( fIsStrategyReposition )+"/"+FloatToString( fIsStrategyAttack )+"/");
 	
 	// Update and sort array to get the strategy
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_AMBUSH, fIsStrategyAmbush );	
@@ -304,11 +424,13 @@ PrettyDebug( "RunControllerLoop : "+FloatToString( fIsStrategyAmbush )+"/"+Float
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_REPOSITION, fIsStrategyReposition );	
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_ATTACK, fIsStrategyAttack );	
 	SortStorageFloat(oCombatController, STORAGE_COMBAT_STRATEGIES);
-	string sStrategy 			= GetStorageLastValueString( oCombatController, STORAGE_COMBAT_STRATEGIES );
-PrettyDebug( "Current Strategy is : "+sStrategy );
+	//dump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
+	string sStrategy 			= GetStorageLastVarName( oCombatController, STORAGE_COMBAT_STRATEGIES );
+	//PrettyDebug( "Current Strategy is : "+sStrategy );
 
 	
 	return FALSE;
+	
 }
 
 // Defines the best tactical goal option for the NPC
@@ -316,6 +438,8 @@ int AssignTacticalGoal( string sStrategy, object oNPC ){
 
 	PrettyDebug("AssignTacticalGoal::sStrategy = "+sStrategy );
 	if( VAR_STRATEGY_EXPLORE == sStrategy ){
+	
+	
 	
 	}else if( VAR_STRATEGY_AMBUSH == sStrategy ){
 	
@@ -336,7 +460,7 @@ int AssignTacticalGoal( string sStrategy, object oNPC ){
 }
 
 // Defines a low but easy goal for the NPC
-int AssingDefaultGoal( string sStrategy, object oNPC ){
+int AssignDefaultGoal( string sStrategy, object oNPC ){
 
 	UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT, 20.0 );
 	UpdateMotivationsLimit( oNPC, 20.0 );
@@ -349,13 +473,13 @@ int AssingDefaultGoal( string sStrategy, object oNPC ){
 int AssignCombatGoals( object oNPC, object oCombatController ){
 
 	// Retrieve the team's strategy
-	string sStrategy 			= GetStorageLastValueString( oCombatController, STORAGE_COMBAT_STRATEGIES );
-dump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES ) ) ;
+	string sStrategy 			= GetStorageLastVarName( oCombatController, STORAGE_COMBAT_STRATEGIES );
+
 	// "Buy" a goal according to strategy and capacities
 	AssignTacticalGoal( sStrategy, oNPC ); 
 	
 	// A downgrading goal is provided to avoid null behaviours
-	AssingDefaultGoal( sStrategy, oNPC ); 
+	AssignDefaultGoal( sStrategy, oNPC ); 
 	
 	return FALSE;
 	
