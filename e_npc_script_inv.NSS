@@ -25,9 +25,9 @@ void main()
 		CreateControllerWaypoint( oNPC, oController ); 
 	
 	NotifyPCInterractionController( oController, oNPC, oC, E_PC_PICKPOCKET );
-//dump( ( oController ) );
+//PrettyDump( ( oController ) );
 		
-// dump( ( oNPC ) );
-// dump( GetInteractionReferer( oNPC ) );
+// PrettyDump( ( oNPC ) );
+// PrettyDump( GetInteractionReferer( oNPC ) );
 
 }

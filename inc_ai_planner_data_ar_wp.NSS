@@ -11,7 +11,7 @@
 
 const string DEFAULT_LOCATION 		= "DEFAULT_LOCATION";
 const string ARRAY_OBJECT 			= "dataobject";
-const string UNIQUE_ID 				= "UNIQUE_ID";
+const string UNIQUE_ID 				= "STORAGE_";
 const string MODULE_NPCID_COUNT 	= "MODULE_NPCID_COUNT";
 
 
@@ -36,7 +36,7 @@ string GetObjectUniqueId( object oObject ) {
 	//
 	int nModuleCount		= GetLocalInt( oModule, MODULE_NPCID_COUNT ) + 1;
 	//
-	sUniqueId				= "STORAGE_" + IntToString( nModuleCount ) + "_";
+	sUniqueId				= UNIQUE_ID + IntToString( nModuleCount ) + "_";
 	//
 	SetLocalString( oObject, UNIQUE_ID, sUniqueId );
 	//
@@ -315,7 +315,7 @@ int SortStorageFloat( object oObject, string sArrayId ){
 	object oA 			= GetStorage( oObject, sArrayId );
 	//
 //PrettyDebug( "///// Array before sort ///// " );
-// dump( oA);
+// PrettyDump( oA);
 	//
 	if( !GetIsObjectValid( oA ) ) return FALSE;
 	
@@ -351,7 +351,7 @@ int SortStorageFloat( object oObject, string sArrayId ){
 	//
 	}
 //PrettyDebug( "///// Array after sort ///// " );
-// dump( oA);	//
+// PrettyDump( oA);	//
 	return TRUE;
 
 }

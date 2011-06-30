@@ -113,7 +113,7 @@ location GetFleeLocation( object oCreature, object oTarget, float fDist, float f
 	//
 	location lFlee 			= Location( GetArea( oCreature ), vPosition, fAngle );
 	//
-DebugLocation( lFlee, "blue" );
+PrettyDebugLocation( lFlee, "blue" );
 	return lFlee;
 	
 }
@@ -259,12 +259,12 @@ void main() {
 	AssignCommand( oNPC, ActionSpeakString( "I'm Fleeing" ) );
 	//
 	object oWP 				= GetControllerWaypointProxy( oNPC );
-// dump( oWP );
-// DebugLocation( GetLocation( oWP ), "green" );
+// PrettyDump( oWP );
+// PrettyDebugLocation( GetLocation( oWP ), "green" );
 	// 
 	object oController 		= GetControllerProxy( oNPC );
-//dump( oController );
-// DebugLocation( GetLocation( oController ), "yellow" );
+//PrettyDump( oController );
+// PrettyDebugLocation( GetLocation( oController ), "yellow" );
 
 // PrettyDebug(":: NPC Heartbeat : Controller = " + GetName( oController ) );
 

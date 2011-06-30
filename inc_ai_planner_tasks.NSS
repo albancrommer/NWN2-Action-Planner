@@ -52,14 +52,14 @@ string GetTaskActions( string sTask )
 int SetTask( object oNPC, object oTaskArray, string sCondition ){
 
 	sCondition			= GetEffectFromTuple( sCondition) ;
-// PrettyDebug( "() SetTask  : Retrieved sCondition from eventual tuple " + sCondition);
+//PrettyDebug( "() SetTask  : Retrieved sCondition from eventual tuple " + sCondition);
 	//
 	object oA			= GetObjectByTag( TASKS_STORAGE );
 	//
 	int i, nRet 		= FALSE;
 	//	
 	int nTasks 			= GetNum2DARows( TASKS_2DA );
-// PrettyDebug( "() SetTask  : start for "+sCondition+" with "+IntToString(nTasks)+" tasks"  );
+//PrettyDebug( "() SetTask  : start for "+sCondition+" with "+IntToString(nTasks)+" tasks"  );
 	//
 	string sId, sEff;
 	//
@@ -71,17 +71,17 @@ int SetTask( object oNPC, object oTaskArray, string sCondition ){
 		//
 		sEff 			= Get2DAString( TASKS_2DA, TASKS_2DA_EFFECTS, i );
 		//
-// PrettyDebug( "() SetTask  : "+sId+" with effect :"+sEff  );
+//PrettyDebug( "() SetTask  : "+sId+" with effect :"+sEff  );
 		//
 		// MULTIPLE TASKS TOKENIZATION MIGHT BE IN ORDER 
 		//
 		// Task Level Iteration, ie: NearObject:Food
 		
 		sEff 			= GetEffectFromTuple( sEff) ;
-// PrettyDebug( "() SetTask  : Retrieved sEff from eventual tuple " + sEff);
+//PrettyDebug( "() SetTask  : Retrieved sEff from eventual tuple " + sEff);
 
 		if( sEff == sCondition ){
-// PrettyDebug( "() SetTask  : Found required task : " + sId);
+//PrettyDebug( "() SetTask  : Found required task : " + sId);
 			//
 			AddToStorageString( oNPC, TASKS_ARRAY, IntToString( GetStorageCount( oNPC, TASKS_ARRAY ) + 1 ), sId );
 			//
@@ -93,7 +93,7 @@ int SetTask( object oNPC, object oTaskArray, string sCondition ){
 	//
 	}
 	//
-// PrettyDebug( "()	SetTask  finished"  );
+//PrettyDebug( "()	SetTask  finished"  );
 	return nRet;	
 
 	
@@ -114,12 +114,12 @@ int getPlanTasks( object oNPC, string sEffects ){
 	object oTasks = CreateStorage( oNPC, TASKS_ARRAY );
 	//
 	while( FALSE == bConditions ){
-// PrettyDebug( "?? Searching with sEffects : "+sEffects );
+//PrettyDebug( "?? Searching with sEffects : "+sEffects );
 
 		bConditions 	= SetTask( oNPC, oTasks, sEffects );
 		//
 		if( FALSE == bConditions) { // If the task can't be achieved
-// PrettyDebug( " : bConditions : FALSE" );
+//PrettyDebug( " : bConditions : FALSE" );
 			//
 			bValid 		= FALSE;
 			//
@@ -130,9 +130,9 @@ int getPlanTasks( object oNPC, string sEffects ){
 		//
 		sConditions		= GetTaskConditions( sTask );
 		//
-// PrettyDebug( "?? New conditions : "+sConditions );
+//PrettyDebug( "?? New conditions : "+sConditions );
 		if( GetConditionsValid( oNPC, sConditions ) ){
-// PrettyDebug( " : bConditions : TRUE" );
+//PrettyDebug( " : bConditions : TRUE" );
 			//
 			bValid 		= TRUE;
 			//
@@ -140,12 +140,12 @@ int getPlanTasks( object oNPC, string sEffects ){
 		
 		}
 		 else {
-// PrettyDebug( " : bConditions : TRUE" );
+//PrettyDebug( " : bConditions : TRUE" );
 			//
 			bConditions = FALSE;
 			//
 			sEffects	= sConditions;
-// PrettyDebug( "?? New sEffects : "+sEffects );
+//PrettyDebug( "?? New sEffects : "+sEffects );
 			
 		}
 		
@@ -157,7 +157,7 @@ int getPlanTasks( object oNPC, string sEffects ){
 //
 int ExecutePlan( object oNPC ){
 	
-// dump( GetStorage( oNPC, TASKS_ARRAY ) );
+//PrettyDump( GetStorage( oNPC, TASKS_ARRAY ) );
 	string sAction;
 	//
 	int i;
@@ -167,7 +167,7 @@ int ExecutePlan( object oNPC ){
 	for( i = GetStorageCount( oNPC, TASKS_ARRAY ) - 1; i >=0 ; i-- ){ // Retrieving last first
 
 		sAction 		= GetTaskActions( GetStorageStringAtIndex( oNPC, TASKS_ARRAY, i ) );
-// PrettyDebug( "()	ExecutePlan  action : " + sAction );
+//PrettyDebug( "()	ExecutePlan  action : " + sAction );
 		//
 		if( ! ExecuteTaskAction( oNPC, sAction ) ) 
 			//

@@ -22,7 +22,7 @@ void main()
 	
 	NotifyPCInterractionController( oController, oNPC, oC, E_PC_ATTACK );
 		
-// dump( ( oNPC ) );
-// dump( GetInteractionReferer( oNPC ) );
+// PrettyDump( ( oNPC ) );
+// PrettyDump( GetInteractionReferer( oNPC ) );
 
 }

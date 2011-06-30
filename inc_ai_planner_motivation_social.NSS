@@ -238,7 +238,7 @@ object CreateControllerWaypoint( object oObject, object oController ) {
 	//
 	SetInteractionReferer( oObject, oController );
 	//
-// DebugObjectLocation( oWP );
+// PrettyDebugObjectLocation( oWP );
 	return oWP;
 
 }
@@ -369,7 +369,7 @@ int AddToControllerListActiveNegative( object oController, object oObject ) {
 object GetControllerProxy( object oNPC ) {
 
 	object oWP				= GetNearestObjectByTag( PC_CONTROLLER_WAYPOINT_TAG, oNPC );
-//DebugLocation( GetLocation( oWP ), "green" );
+//PrettyDebugLocation( GetLocation( oWP ), "green" );
 	//
 	if( !GetIsObjectValid( oWP ) || !GetIsCrisisWPClose( oWP, oNPC ) )
 

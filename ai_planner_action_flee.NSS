@@ -117,7 +117,7 @@ location GetFleeLocation( object oCreature, object oTarget, float fDist, float f
 	//
 	location lFlee 			= Location( GetArea( oCreature ), vPosition, fAngle );
 	//
-DebugLocation( lFlee, "blue" );
+PrettyDebugLocation( lFlee, "blue" );
 	return lFlee;
 	
 }

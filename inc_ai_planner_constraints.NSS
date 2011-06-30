@@ -65,8 +65,8 @@ int InitTasks(){
 		// PrettyDebug( "() InitTasks Task : " + sId + " : " + sCond + " / " + sEff + " / " + sAct );
 	}
 	//
-// dump( oA);
-// dump( oAId );
+// PrettyDump( oA);
+// PrettyDump( oAId );
 	return TRUE;
 }
 
@@ -100,7 +100,7 @@ int InitGoals(){
 		
 // PrettyDebug( "() InitGoals Goal : " + sId + " : " + sCond + " / " + sEff  );
 	}
-// dump( oA);
+// PrettyDump( oA);
 	//
 	return TRUE;
 }

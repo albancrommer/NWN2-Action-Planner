@@ -11,18 +11,18 @@ void main()
 	
 	SetLocalInt( oM,"a",1);
 	SetLocalInt( oM,"b",2);
-	dump( oM );
+	PrettyDump( oM );
 	SetLocalInt( oM,"a",2);
-	dump( oM );
+	PrettyDump( oM );
 	DeleteLocalInt( oM,"a");
-	dump( oM );
+	PrettyDump( oM );
 
 */
 // PrettyDebug( " start / ");
 InitGoals();
-//dump( GetStorage( GetCacheObject(), GOALS_STORAGE ) );
+//PrettyDump( GetStorage( GetCacheObject(), GOALS_STORAGE ) );
 InitTasks();
-//dump( GetStorage( GetCacheObject(), TASKS_STORAGE ) );
+//PrettyDump( GetStorage( GetCacheObject(), TASKS_STORAGE ) );
 
 
 	// This is the standard NWN2 Module on load script

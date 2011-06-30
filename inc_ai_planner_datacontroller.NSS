@@ -39,4 +39,3 @@
 // 	If you want to use the nwnx plugin xp_utilities
 //	#include "inc_ai_planner_data_tok_xp" 
 
-

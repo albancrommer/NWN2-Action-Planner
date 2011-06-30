@@ -23,7 +23,7 @@ int CrowdAttractor( object oPC, object oObject, float fAttract, float fDist ){
 	//
 	while( GetIsObjectValid( oNPC ) && GetDistanceBetween( oObject, oNPC ) < fDist ) {
 	
-//		DebugObjectLocation( oNPC, "blue" );
+//		PrettyDebugObjectLocation( oNPC, "blue" );
 		
 		oController = GetController( oNPC, oPC );
 		
@@ -39,7 +39,7 @@ int CrowdAttractor( object oPC, object oObject, float fAttract, float fDist ){
 				
 		}
 		
-//DebugObjectLocation ( oNPC);
+//PrettyDebugObjectLocation ( oNPC);
 		oNPC 		= GetNearestCreature( CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_NOT_PC, oObject, ++nNth, CREATURE_TYPE_IS_ALIVE, CREATURE_ALIVE_TRUE );
 	
 	}

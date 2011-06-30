@@ -20,7 +20,7 @@ void main()
 	
 	// if a FORCED COMBAT Waypoint is around, creature is tagged to enter combat planning
 	//
-	object oWP = GetNearestObjectByTag( WP_FORCED_COMBAT, oNPC );
+	object oWP = GetNearestObjectByTag( TAG_FORCED_COMBAT_WP, oNPC );
 	if( GetIsObjectValid( oWP ) ){
 		float fDist = GetLocalFloat( oWP, VAR_FORCED_COMBAT_DIST );
 		float fDistBet = GetDistanceBetween( oWP, oNPC );

@@ -17,11 +17,11 @@ int GetIsNear( object oNPC, string sTag, int nType = OBJECT_TYPE_PLACEABLE, floa
 	//
 	while( GetDistanceBetween( oNPC, oObj ) <= fDist ){
 // PrettyDebug( "() GetIsNear : " +sTag+" looks for " + GetTag( oObj) );
-// DebugObjectLocation( oObj);
+// PrettyDebugObjectLocation( oObj);
 		//
 		if( sTag == GetTag( oObj ) ){
 // PrettyDebug( "() GetIsNear : I found it ");
-// DebugObjectLocation( oObj, "blue");
+// PrettyDebugObjectLocation( oObj, "blue");
 			//
 			return TRUE;
 			

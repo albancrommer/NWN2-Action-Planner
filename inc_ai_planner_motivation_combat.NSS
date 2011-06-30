@@ -25,7 +25,7 @@ float _safeDivide( float fDivident, float fDivisor ){
 	if( fDivisor == 0.0 ) {
 		fDivisor = 0.01;
 	}
-	//PrettyDebug( "_safeDivide : " + FloatToString( fDivident ) +":"+FloatToString( fDivisor) );
+	PrettyDebug( "_safeDivide : " + FloatToString( fDivident ) +":"+FloatToString( fDivisor) );
 	return fDivident / fDivisor;
 	
 }
@@ -164,10 +164,13 @@ int AddToCombatController( object oCombatController, object oNPC ){
 	if( oNPC 		== GetStorageObject( oCombatController, STORAGE_TEAM_MEMBERS, sId )  ) 
 		return FALSE;
 		
-	// Add to Storage and update count
+	// Adds oNPC to Controller's Team Storage 
 	AddToStorageObject( oCombatController, STORAGE_TEAM_MEMBERS, sId, oNPC );
 	
-	//dump( GetStorage( oCombatController, STORAGE_TEAM_MEMBERS ) );
+	// Binds controller to NPC
+	SetLocalObject( oNPC, VAR_OBJ_COMB_CONT, oCombatController );
+	
+	PrettyDump( GetStorage( oCombatController, STORAGE_TEAM_MEMBERS ) );
 	return TRUE;
 
 }
@@ -186,7 +189,7 @@ object CreateCombatController( object oNPC ){
 	
 	// New object
 	object oCombatController	= CreateObject( OBJECT_TYPE_PLACEABLE, TAG_COMBAT_CONTROLLER, GetLocation( oNPC ) );
-//PrettyDebug( "CreateCombatController::"+GetObjectUniqueId( oCombatController )+" with tag "+ GetTag(oCombatController));
+PrettyDebug( "CreateCombatController::"+GetObjectUniqueId( oCombatController )+" with tag "+ GetTag(oCombatController));
 	
 	int nFaction 				= GetFaction( oNPC );
 	SetCombatControllerFaction( oCombatController, nFaction );
@@ -212,10 +215,21 @@ int GetIsCombatControllerValid( object oCombatController, object oNPC ){
 // returns or create the combat controller
 object GetCombatControllerProxy( object oNPC ){
 
+	object oCombatController;
+
+	// Check if bind exists on NPC for a combat controller
+	// AND if they're (still) in the same area
+	oCombatController = GetLocalObject( oNPC, VAR_OBJ_COMB_CONT );
+	if( GetIsObjectValid( oCombatController ) && GetArea( oNPC ) == GetArea( oCombatController ) ){
+		PrettyDebug( "GetCombatControllerProxy::Returned binded controller");
+		return oCombatController;
+	}
+
+
 	// Use existing controller if 1. one is near 2. this one is valid
 	int nNth 			= 1;
 	int bSolved			= FALSE;
-	object oCombatController	= GetNearestObjectByTag( TAG_COMBAT_CONTROLLER, oNPC, nNth );
+	oCombatController	= GetNearestObjectByTag( TAG_COMBAT_CONTROLLER, oNPC, nNth );
 	while( GetIsObjectValid( oCombatController ) && !bSolved ){
 		if( GetIsCombatControllerValid( oCombatController, oNPC ) ){
 			bSolved		= TRUE;
@@ -223,7 +237,7 @@ object GetCombatControllerProxy( object oNPC ){
 	}
 	
 	
-	//DebugObjectLocation( oCombatController, "blue" );	
+	//PrettyDebugObjectLocation( oCombatController, "blue" );	
 	if( GetIsObjectValid( oCombatController ) ){
 		PrettyDebug( "GetCombatControllerProxy:: found valid controller");
 	 	return oCombatController;
@@ -231,7 +245,7 @@ object GetCombatControllerProxy( object oNPC ){
 	 
 	// Create new controller
 	oCombatController 		= CreateCombatController( oNPC );
-	//DebugObjectLocation( oCombatController, "green" );		
+	//PrettyDebugObjectLocation( oCombatController, "green" );		
 	AddToCombatController( oCombatController, oNPC ); 
 	
 	return oCombatController;
@@ -252,7 +266,7 @@ float SetImmediateDanger( object oCombatController){
 	}
 	else fImmediateDanger		=0.5	 ;
 	SetLocalFloat( oCombatController, VAR_CDATA_DANGER, fImmediateDanger );
-	//PrettyDebug( "func::SetImmediateDanger:"+FloatToString(fImmediateDanger) );
+	PrettyDebug( "func::SetImmediateDanger:"+FloatToString(fImmediateDanger) );
 	return fImmediateDanger;
 
 }
@@ -267,7 +281,7 @@ float SetAreaKnowledge( object oCombatController){
 	int nCurrentPoint 		= GetLocalInt( oCombatController, VAR_COUNT_RECO_POINTS );
 	float fAreaKnowledge    = _safeDivide( IntToFloat( nCurrentPoint ), IntToFloat( nMaxPoints ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_AREA_KNOW, fAreaKnowledge);
-	//PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
+	PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
 	return fAreaKnowledge;
 	
 }
@@ -280,7 +294,7 @@ float SetTeamMorale( object oCombatController){
 	int nAll 			= GetLocalInt( oCombatController, VAR_COUNT_ALL );
 	float fTeamMorale 	= _safeDivide( IntToFloat( nDead ), IntToFloat( nAll ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_MORALE, fTeamMorale);
-	//PrettyDebug( "func::SetTeamMorale:"+FloatToString(fTeamMorale) );
+	PrettyDebug( "func::SetTeamMorale:"+FloatToString(fTeamMorale) );
 	return fTeamMorale;
 	 
 }
@@ -300,7 +314,7 @@ float SetPositionQuality( object oCombatController){
 	float fSubteamsFractions	= GetSubteamsFractions( oCombatController );
 	float fPositionQuality = sqrt( fSubteamsFractions );
 	SetLocalFloat( oCombatController, VAR_CDATA_POSITION, fPositionQuality);
-	//PrettyDebug( "func::SetPositionQuality:"+FloatToString(fPositionQuality) );
+	PrettyDebug( "func::SetPositionQuality:"+FloatToString(fPositionQuality) );
 	return fPositionQuality;
 }
 
@@ -308,7 +322,7 @@ float SetPositionQuality( object oCombatController){
 // my Rounds To Life is equal to my Hit Points divided by my enemies Damages per round
 float SetEnemyThreat( object oCombatController){
 
-	//PrettyDebug( "func::SetEnemyThreat:"+FloatToString(0.01) );
+	PrettyDebug( "func::SetEnemyThreat:"+FloatToString(0.01) );
 	return 0.01;
 	
 }
@@ -414,7 +428,7 @@ int RunControllerLoop( object oCombatController ){
 	float fIsStrategyFlee		= GetStrategyFlee( oCombatController, fEnemyThreat, fTeamMorale);
 	float fIsStrategyReposition	= GetStrategyReposition( oCombatController, fEnemyThreat, fPositionQuality);
 	float fIsStrategyAttack		= GetStrategyAttack( oCombatController, fPositionQuality, fEnemyThreat);
-	//PrettyDebug( "RunControllerLoop : "+FloatToString( fIsStrategyAmbush )+"/"+FloatToString( fIsStrategyExplore )+"/"+FloatToString( fIsStrategyTaunt )+"/"+FloatToString( fIsStrategyFlee )+"/"+FloatToString( fIsStrategyReposition )+"/"+FloatToString( fIsStrategyAttack )+"/");
+	PrettyDebug( "RunControllerLoop : "+FloatToString( fIsStrategyAmbush )+"/"+FloatToString( fIsStrategyExplore )+"/"+FloatToString( fIsStrategyTaunt )+"/"+FloatToString( fIsStrategyFlee )+"/"+FloatToString( fIsStrategyReposition )+"/"+FloatToString( fIsStrategyAttack )+"/");
 	
 	// Update and sort array to get the strategy
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_AMBUSH, fIsStrategyAmbush );	
@@ -424,9 +438,9 @@ int RunControllerLoop( object oCombatController ){
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_REPOSITION, fIsStrategyReposition );	
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_ATTACK, fIsStrategyAttack );	
 	SortStorageFloat(oCombatController, STORAGE_COMBAT_STRATEGIES);
-	//dump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
+	PrettyDump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
 	string sStrategy 			= GetStorageLastVarName( oCombatController, STORAGE_COMBAT_STRATEGIES );
-	//PrettyDebug( "Current Strategy is : "+sStrategy );
+	PrettyDebug( "Current Strategy is : "+sStrategy );
 
 	
 	return FALSE;
@@ -439,12 +453,20 @@ int AssignTacticalGoal( string sStrategy, object oNPC ){
 	PrettyDebug("AssignTacticalGoal::sStrategy = "+sStrategy );
 	if( VAR_STRATEGY_EXPLORE == sStrategy ){
 	
-	
+		// Single tactic : look around and try to qualify 
+		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_EXPLORE, 20.0 );
+		UpdateMotivationsLimit( oNPC, 20.0 );
 	
 	}else if( VAR_STRATEGY_AMBUSH == sStrategy ){
 	
-	}else if( VAR_STRATEGY_TAUNT == sStrategy ){
+		// Tactic 1 : become hidden and position at low / hidden point
+		
+		// Tactic 2 : position at high point 
 	
+	}else if( VAR_STRATEGY_TAUNT == sStrategy ){
+
+		// Single tactic : Shout at the enemy
+		
 	}else if( VAR_STRATEGY_FLEE == sStrategy ){
 	
 	}else if( VAR_STRATEGY_REPOSITION == sStrategy ){
@@ -462,8 +484,7 @@ int AssignTacticalGoal( string sStrategy, object oNPC ){
 // Defines a low but easy goal for the NPC
 int AssignDefaultGoal( string sStrategy, object oNPC ){
 
-	UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT, 20.0 );
-	UpdateMotivationsLimit( oNPC, 20.0 );
+	UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT, 10.0 );
 
 	return FALSE;
 }

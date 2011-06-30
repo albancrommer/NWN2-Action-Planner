@@ -17,7 +17,7 @@ int DestroyInteractionController( object oController ){
 	while( GetIsObjectValid( oWP ) ){
 	
 		if( GetInteractionReferer( oWP ) == oController )
-// DebugObjectLocation( oWP );
+// PrettyDebugObjectLocation( oWP );
 			DestroyObject( oWP, 0.1 );
 		
 		oWP			= GetNearestObjectByTag( PC_CONTROLLER_WAYPOINT_TAG, oController, ++nNth) ;
@@ -40,11 +40,11 @@ void main()
 // PrettyDebug("::	Controller HB : State = " + FloatToString( fState ) );
 	//
 	object oStorage	= GetStorage( oController, PC_CONTROLLER_STORAGE_ACTIVE_NEGATIVE );
-// 	dump(oStorage);
+// 	PrettyDump(oStorage);
 	oStorage	= GetStorage( oController, PC_CONTROLLER_STORAGE_ACTIVE_POSITIVE );
-// 	dump(oStorage);
+// 	PrettyDump(oStorage);
 	oStorage	= GetStorage( oController, PC_CONTROLLER_STORAGE_PASSIVE );
-// 	dump(oStorage);
+// 	PrettyDump(oStorage);
 	
 	if( fState > -0.1 && fState < 0.1 )
 	

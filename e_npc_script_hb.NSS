@@ -13,7 +13,7 @@ void main()
 	//
 	object oNPC = OBJECT_SELF;
 	//
-//dump( oNPC ) ;
+//PrettyDump( oNPC ) ;
 // PrettyDebug( "FATIGUE : " + FloatToString( GetFatigue( oNPC ) ) + " HUNGER : " + FloatToString( GetHunger( oNPC ) ) );
 
 	UpdateNPC( oNPC );
@@ -30,5 +30,10 @@ void main()
 			
 		}
 	//
-	} else PrettyDebug( GetTag(oNPC) + " has no valid plan" );
+	} else{
+	
+		PrettyDump( GetObjectByTag( TASKS_ARRAY ) );
+		PrettyDump(GetStorage( oNPC, GOALS_ARRAY ) );
+	 	PrettyDebug( GetTag(oNPC) + " has no valid plan" );
+	}
 }

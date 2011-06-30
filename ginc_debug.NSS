@@ -17,6 +17,9 @@
 
 //void main(){}
 		
+
+const int DEBUG						= TRUE;
+
 const int POST_COLOR_RED 			= 4294901760; 	// FFFF0000
 const int POST_COLOR_GREEN 			= 4278255360; 	// FF00FF00
 const int POST_COLOR_BLUE 			= 4278190335; 	// FF0000FF
@@ -138,6 +141,7 @@ void DebugMessageLine(int nLine, string sMessage, int nX=50, float fDuration=DUR
 // Post message with drop-shadow and print to log
 void PrettyPostString(object oTarget, string sMessage, float fDuration, int nColor=POST_COLOR_WHITE)
 {
+	if( !DEBUG ) return;
 	int nX = PRETTY_X_OFFSET;
 	int nLineOffset = GetGlobalInt(PRETTY_LINE_COUNT_VAR);
 	int nY = PRETTY_Y_OFFSET + (nLineOffset * LINE_SIZE);
@@ -206,7 +210,7 @@ void SendMessageToPartyByStrRef(object oPlayer, int nStrRef)
 	
 }
 
-void dump( object oO )
+void PrettyDump( object oO )
 {	
 	//
 	int nC = GetVariableCount(oO);
@@ -223,7 +227,7 @@ void dump( object oO )
 
 
 // blue, green, orange 
-void DebugObjectLocationOnObject( object oObject, string sColor = "yellow" )
+void PrettyPrettyDebugObjectLocationOnObject( object oObject, string sColor = "yellow" )
 {
 	effect eEffect = EffectNWN2SpecialEffectFile( "fx_gem_energy_" + sColor );
 	//
@@ -233,7 +237,7 @@ void DebugObjectLocationOnObject( object oObject, string sColor = "yellow" )
 
 
 // blue, green, orange 
-void DebugObjectLocation( object oObject, string sColor = "yellow" )
+void PrettyDebugObjectLocation( object oObject, string sColor = "yellow" )
 {
 	effect eEffect = EffectNWN2SpecialEffectFile( "fx_gem_energy_" + sColor );
 	//
@@ -242,7 +246,7 @@ void DebugObjectLocation( object oObject, string sColor = "yellow" )
 
 
 // blue, green, orange 
-void DebugLocation( location lLoc, string sColor = "yellow" )
+void PrettyDebugLocation( location lLoc, string sColor = "yellow" )
 {
 	effect eEffect = EffectNWN2SpecialEffectFile( "fx_gem_energy_" + sColor );
 	//

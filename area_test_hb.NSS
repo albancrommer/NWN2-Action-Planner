@@ -13,8 +13,8 @@ void main() {
 
 /*
 	object oNPC = GetObjectByTag( "al_testingpc" );
-	dump( GetControllerProxy( oNPC ) );
-	DebugObjectLocation( oNPC );
+	PrettyDump( GetControllerProxy( oNPC ) );
+	PrettyDebugObjectLocation( oNPC );
 */
 
 }
