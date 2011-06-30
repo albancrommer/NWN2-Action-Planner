@@ -105,7 +105,7 @@ int GetPlan( object oNPC ){
 	//
 	while( FALSE == bSolved ){
 		//
- PrettyDebug( "?? "+ObjectToString( oNPC )+ " Searching with Goal : "+sGoal );
+//PrettyDebug( "?? "+ObjectToString( oNPC )+ " Searching with Goal : "+sGoal );
 		if( INVALID 		== sGoal ) { // No more reachable goal
 			//
 			bSolved 		= TRUE; 
@@ -117,7 +117,7 @@ int GetPlan( object oNPC ){
 		}
 		//
 		sConditions 		= GetGoalConditions( sGoal );
-PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal conditions : "+sConditions );
+//PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal conditions : "+sConditions );
 		//
 		if( ! GetConditionsValid( oNPC, sConditions ) ){ // Not a valid goal
 			//
@@ -139,7 +139,7 @@ PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal conditions : "+sConditions );
 		//
 		} else { 
 			//
-PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal failed for effects : "+sEffects );
+//PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal failed for effects : "+sEffects );
 			sGoal = GetHighestGoal( oNPC );// Look for another goal
 		// 
 		}
@@ -152,6 +152,6 @@ PrettyDebug( "?? "+ObjectToString( oNPC )+ " Goal failed for effects : "+sEffect
 	//
 	SetLastGoalValue( oNPC, fGoalValue );
 	//
- PrettyDebug( "?? "+ObjectToString( oNPC )+ " Plan Solved !  " + sGoal );
+ //PrettyDebug( "?? "+ObjectToString( oNPC )+ " Plan Solved !  " + sGoal );
 	return TRUE;
 }

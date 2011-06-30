@@ -24,7 +24,7 @@ int UpdateWorldState_Combat( object oNPC ) {
 
 	if( GetLocalInt( oNPC, VAR_FORCED_COMBAT ) ) {
 		SetWorldState( oNPC , COMBAT, TRUE );
-		PrettyDebug( "Forced Combat") ;
+		//PrettyDebug( "Forced Combat") ;
 	}
 	
 	return TRUE;

@@ -12,10 +12,11 @@
 void main()
 {
 	object oCombatController = OBJECT_SELF;
-	PrettyDebug( "Combat Controller HB" );
+	//PrettyDebug( "Combat Controller HB" );
 	
 	// This takes care of all computation regarding the team
 	// strategies. 
+	// @see: inc_ai_planner_motivation_combat
 	RunControllerLoop( oCombatController );
 	
 }

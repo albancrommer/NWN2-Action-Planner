@@ -39,7 +39,13 @@ const string 	VAR_CDATA_AREA_KNOW	 	= "VAR_CDATA_AREA_KNOW";
 const string 	VAR_CDATA_POSITION		= "VAR_CDATA_POSITION";
 const string 	VAR_CDATA_MORALE		= "VAR_CDATA_MORALE";
 const string 	VAR_CDATA_THREAT		= "VAR_CDATA_THREAT";
-const string 	VAR_OBJ_COMB_CONT		= "VAR_OBJ_COMB_CONT";
+const string 	VAR_OBJ_COMB_CONT		= "VAR_OBJ_COMB_CONT"; // The combat controller var on each NPC
+const string 	VAR_COMB_CONT_DFLT_LOC	= "VAR_COMB_CONT_DFLT_LOC"; // The default Location ie. first WP of Combat Controller
+const string 	VAR_PREVIOUS_LOCATION	= "VAR_PREVIOUS_LOCATION"; // Stores its previous location on NPC
+const string 	VAR_ROUNDS_BLOCKED		= "VAR_ROUNDS_BLOCKED"; // Stores # of rounds NPC is blocked at one place
+
+
+
 const string 	VAR_CONTROLLER_FACTION	= "VAR_CONTROLLER_FACTION";
 const string 	VAR_COUNT_ALL			= "VAR_COUNT_ALL";
 const string 	VAR_COUNT_DEAD			= "VAR_COUNT_DEAD";
@@ -47,6 +53,7 @@ const string 	VAR_COUNT_RECO_POINTS	= "VAR_COUNT_RECO_POINTS";
 const string 	VAR_ENEMY_COUNT			= "VAR_TEAM_COUNT";
 const string 	VAR_EXPLORE_CONT_INDEX	= "VAR_EXPLORE_CONT_INDEX";
 const string 	VAR_EXPLORE_DESTINATION	= "VAR_EXPLORE_DESTINATION";
+const string 	VAR_EXPLORE_MAX_WP		= "VAR_EXPLORE_MAX_WP";
 const string 	VAR_EXPLORE_QUAL_ROUNDS	= "VAR_EXPLORE_QUAL_ROUNDS";
 const string 	VAR_FORCED_COMBAT	 	= "VAR_FORCED_COMBAT";
 const string 	VAR_FORCED_COMBAT_DIST	= "VAR_FORCED_COMBAT_DIST";
@@ -62,8 +69,20 @@ const string 	TAG_EXPLORE_WAYPOINT	= "ai_planner_explore_wp";
 const string 	TAG_FORCED_COMBAT_WP	= "ai_planner_forced_combat";
 
 const string 	WORLDSTATE	 			= "WORLDSTATE";
-const int		PARAM_WALKLINE_DEPTH	= 3;
-const int		PARAM_EXPLORE_QUAL_ROUNDS	= 3;
+const int		PARAM_EXPLORE_QUAL_ROUNDS	= 0; // # of rounds spent qualifying points
+const int		PARAM_EXPLORE_RUN		= FALSE; // Has NPC run when exploring if TRUE
+const int		PARAM_EXPLORE_MAX_DEPTH	= 49; // # of lines in ai_planner_explore.2DA 
 
-const float 	PARAM_WALKLINE_DIST		= 5.0;
+const int		PARAM_MAX_ROUNDS_BLOCKED= 2; // # of rounds an NPC is allowed to stay blocked
+const int		PARAM_WALKLINE_DEPTH	= 3; // # of iterations used to detect invalid locations
+const float 	PARAM_WALKLINE_DIST		= 5.0; // Iterated distance to detect invalid locations 
 const string 	_2DA_EXPLORE			= "ai_planner_explore";
+
+const float 	PARAM_DOORS_DISTANCE    = 2.0; // Distance under which doors can be auto-opened
+const float 	PARAM_DOORS_DELAY    	= 60.0; // Time under which doors will be auto-closed
+
+// record on NPC : last location target VAR_EXPLORE_DESTINATION
+// record on NPC : qualifying round time VAR_EXPLORE_QUAL_ROUNDS
+// record on controller : last location # VAR_EXPLORE_CONT_INDEX
+// storage on controller : waypoints STORAGE_EXPLORE_WAYPOINTS
+

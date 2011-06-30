@@ -16,8 +16,9 @@
 // ChazM 5/14/07 - added SendMessageToAllPlayersByStrRef(), SendMessageToPartyByStrRef()
 
 //void main(){}
-		
+#include "X0_I0_POSITION"
 
+//const int DEBUG						= FALSE;
 const int DEBUG						= TRUE;
 
 const int POST_COLOR_RED 			= 4294901760; 	// FFFF0000
@@ -226,6 +227,25 @@ void PrettyDump( object oO )
 }
 
 
+void PrettyDumpLocation( object oO )
+{	
+	//
+	int nC = GetVariableCount(oO);
+	//
+	PrettyDebug( "//////////////////////////////////////// ");
+	PrettyDebug( "DUMP OBJECT : " + GetTag( oO) + " / Var Count : " + IntToString(nC) );
+	//
+	int i;
+	//
+	for( i=0; i<nC; i++)
+		if( GetVariableType( oO, i) == VARIABLE_TYPE_LOCATION ){
+		PrettyDebug( "Var[" + IntToString(i)+"] " +GetVariableName(oO,i) + " = " + LocationToString( GetVariableValueLocation(oO,i) ) );
+		
+		}
+}
+
+
+
 // blue, green, orange 
 void PrettyPrettyDebugObjectLocationOnObject( object oObject, string sColor = "yellow" )
 {
@@ -252,3 +272,4 @@ void PrettyDebugLocation( location lLoc, string sColor = "yellow" )
 	//
 	ApplyEffectAtLocation( DURATION_TYPE_TEMPORARY, eEffect, lLoc, 2.0 );
 }
+
