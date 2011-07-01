@@ -299,8 +299,8 @@ int GetTeamMaxExploreWPCount( object oCombatController ){
 	// Calculates the max WP depending on team count and store it for caching purpose
 	int nTeamCount			= GetTeamCount( oCombatController );
 	//PrettyDebug("SetAreaKnowledge nTeamCount:"+IntToString( nTeamCount ) );
-	float nBigDistance 		= ( log( IntToFloat(nTeamCount) ) + 1 ) * COMBAT_ZONE_CHUNK ;
-	int nMaxPoints 			= FloatToInt( 3.14*pow( nBigDistance, 2.0) / pow( COMBAT_ZONE_CHUNK, 2.2 ) );
+	float nBigDistance 		= ( log( IntToFloat(nTeamCount) ) + 1 ) * PARAM_COMBAT_ZONE_CHUNK ;
+	int nMaxPoints 			= FloatToInt( 3.14*pow( nBigDistance, 2.0) / pow( PARAM_COMBAT_ZONE_CHUNK, 2.2 ) );
 	if( nMaxPoints < 2 ) {
 		nMaxPoints = 2;
 	}

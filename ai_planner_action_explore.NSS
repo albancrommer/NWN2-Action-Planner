@@ -23,10 +23,16 @@ int DeleteDestination( object oNPC){
 
 
 // Writes the default Location if none set yet 
-location GetCombatControllerDefaultLocation( object oCombatController ){
-	
-	location lLoc 		= GetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC );
-	return lLoc;
+location GetCombatControllerDefaultLocation( object oCombatController, object oNPC ){
+
+	location lDefaultLoc	= GetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC );
+	if( GetIsLocationValid( lDefaultLoc ) ) {
+		return lDefaultLoc;
+	}
+	float fNewFace			= IntToFloat( Random( 180 ) ) + GetFacing( oNPC );
+	lDefaultLoc				= GenerateNewLocation( oNPC, 0.0, fNewFace, fNewFace );
+	SetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC, lDefaultLoc );
+	return lDefaultLoc;
 	
 }
 
@@ -34,7 +40,7 @@ location GetCombatControllerDefaultLocation( object oCombatController ){
 int GetIsDestinationReached( object oNPC ){
 
 	location lDestination 		= GetLocalLocation( oNPC, VAR_EXPLORE_DESTINATION );
-	PrettyDebugLocation( lDestination, "orange");
+	//PrettyDebugLocation( lDestination, "orange");
 	if( GetDistanceBetweenLocations( lDestination, GetLocation( oNPC ) ) < 1.0 ){
 		//PrettyDebug( "GetIsDestinationReached::TRUE " );
 		return TRUE;
@@ -98,7 +104,7 @@ int GetIsWalklineValid( object oNPC ){
 	SetLocalLocation( oNPC, VAR_PREVIOUS_LOCATION, lSelf );
 	if( lSelf != lPrevious ){
 		SetLocalInt( oNPC, VAR_ROUNDS_BLOCKED, 0);
-		return FALSE;
+		return TRUE;
 	}
 	int nRoundsBlocked	= GetLocalInt( oNPC, VAR_ROUNDS_BLOCKED ) + 1;
 	SetLocalInt( oNPC, VAR_ROUNDS_BLOCKED, nRoundsBlocked );
@@ -129,20 +135,6 @@ int GetMaxExploreWP( object oCombatController ){
 	return nMaxExploreWP;
 }
 
-// Writes the default Location if none set yet 
-int SetCombatControllerDefaultLocation( object oCombatController, object oWP ){
-	
-	// Try to retrieve location
-	location lLoc 		= GetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC );
-	if( GetIsObjectValid(GetAreaFromLocation(lLoc)) ){
-		return FALSE;
-	}
-	// Set Default Location to the one of the WP provided
-	lLoc			 	= GetLocation( oWP );
-	SetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC, lLoc );
-	return TRUE;
-	
-}
 
 
 // Compares Current size of exploration waypoint storage with max amount
@@ -153,9 +145,38 @@ int GetIsMaxExplorationWPLimitReached( object oCombatController ){
 	if( nCurrentStoredWPCount < nMaxExploreWPCount  ){
 		return FALSE;
 	}
+	
 	return TRUE;
 }
 
+// Compares the current search index to the max value 
+int GetIsIndexExplorationWPLimitReached(object oCombatController){
+
+	int nSearchIndex				= GetLocalInt( oCombatController, VAR_EXPLORE_CONT_INDEX );
+	if( nSearchIndex < PARAM_EXPLORE_MAX_DEPTH ){
+//		PrettyDebug( "GetIsIndexExplorationWPLimitReached::FALSE");
+		return FALSE;
+	}
+	// resets the index and the default location, so we're searching at a different angle
+	int nCurrentResetCount			= GetLocalInt( oCombatController, VAR_EXPLORE_RESET_COUNT );
+	if(  nCurrentResetCount < PARAM_EXPLORE_MAX_RESET ){
+	
+		PrettyDebug( "GetIsIndexExplorationWPLimitReached::LIMIT REACHED nCurrentResetCount:"+IntToString( nCurrentResetCount )+"/"+IntToString( PARAM_EXPLORE_MAX_RESET ));
+		SetLocalInt( oCombatController, VAR_EXPLORE_RESET_COUNT, ++nCurrentResetCount );
+		SetLocalInt( oCombatController, VAR_EXPLORE_CONT_INDEX, 1);
+		location lOldLoc			= GetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC );
+		float fNewFace				= PARAM_EXPLORE_ITER_ANG + GetFacingFromLocation( lOldLoc );
+		object oArea				= GetArea( oCombatController );
+	    vector vNewPos 				= GetChangedPosition(GetPositionFromLocation(lOldLoc),
+                                    	0.0,
+                                    	fNewFace);
+     	location lDefaultLoc		= Location(oArea, vNewPos, fNewFace);
+		SetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC, lDefaultLoc );
+		return FALSE;
+	}
+//	PrettyDebug( "GetIsIndexExplorationWPLimitReached::TRUE");
+	return TRUE;
+}
 
 // Retrieves a new Destination from the controller
 int GetNewDestination( object oNPC ){
@@ -169,21 +190,21 @@ int GetNewDestination( object oNPC ){
 	// Checks if search area is expanding by comparing current / max wp for controller
 	int nCurrentStoredWPCount		= GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
 	int nMaxExploreWPCount			= GetMaxExploreWP( oCombatController );
-	int nSearchIndex			= GetLocalInt( oCombatController, VAR_EXPLORE_CONT_INDEX );
+	int nSearchIndex				= GetLocalInt( oCombatController, VAR_EXPLORE_CONT_INDEX );
 	//PrettyDebug( "GetNewDestination::nCurrentStoredWPCount #"+IntToString(nCurrentStoredWPCount)+" nMaxExploreWPCount:"+IntToString(nMaxExploreWPCount));
-	if( !GetIsMaxExplorationWPLimitReached(oCombatController) && nSearchIndex < PARAM_EXPLORE_MAX_DEPTH ){
+	if( !GetIsMaxExplorationWPLimitReached(oCombatController) && !GetIsIndexExplorationWPLimitReached( oCombatController ) ){
 	
 		// If so provides a new valid location to visit 
 		int bSolved					= FALSE;
-		location lDefaultLocation	= GetCombatControllerDefaultLocation( oCombatController );
+		location lDefaultLocation	= GetCombatControllerDefaultLocation( oCombatController, oNPC );
 		// Run a problem solution loop : has to be a valid location inside search depth limit to be solved
 		while( !bSolved && nSearchIndex < PARAM_EXPLORE_MAX_DEPTH ){
 		
 			string sAngle				= Get2DAString( _2DA_EXPLORE, "angle", nSearchIndex );
 			float fAngle				= StringToFloat( sAngle ) + GetFacingFromLocation(lDefaultLocation) ;
 			string sDist				= Get2DAString( _2DA_EXPLORE, "distance", nSearchIndex );
-			float fDist					= StringToFloat( sDist ) * COMBAT_ZONE_CHUNK;
-			//PrettyDebug( "GetNewDestination::nSearchIndex #"+IntToString(nSearchIndex)+" sAngle:"+FloatToString(fAngle)+" sDist:"+FloatToString(fDist));
+			float fDist					= StringToFloat( sDist ) * PARAM_COMBAT_ZONE_CHUNK;
+			PrettyDebug( "GetNewDestination::nSearchIndex #"+IntToString(nSearchIndex)+" sAngle:"+FloatToString(fAngle)+" sDist:"+FloatToString(fDist));
 			lDestination 				= GenerateNewLocation( oCombatController, fDist, fAngle, fAngle );
 			if( GetIsLocationValid( lDestination ) ){
 				//PrettyDebug( "GetNewDestination::VALID "+LocationToString(lDestination) );
@@ -222,24 +243,26 @@ int GetNewDestination( object oNPC ){
 // at oNPC location if the nearest waypoint  is invalid
 int CreateNewExploreWaypoint( object oCombatController, object oNPC ){
 	
+	//PrettyDebug( "()CreateNewExploreWaypoint::CALL");
 	
 	// Checks if creation is allowed
 	if( GetIsMaxExplorationWPLimitReached( oCombatController ) ){
 		return FALSE;}
 	
 	object oWP =  GetNearestObjectByTag( TAG_EXPLORE_WAYPOINT );
-	if( GetIsObjectValid(oWP) && GetDistanceBetween(oNPC,oWP)<( COMBAT_ZONE_CHUNK - 1.0 ) ){
+	if( GetIsObjectValid(oWP) && GetDistanceBetween(oNPC,oWP)<( PARAM_COMBAT_ZONE_CHUNK - 1.0 ) ){
 		return FALSE;}
 	
 	// Creates exploration waypoint
-	int nFace				= Random( 180 );
-	AssignCommand( oNPC, SetFacing( IntToFloat( nFace ) ) ); // Avoids all to similar explorations
-	oWP						= CreateObject(OBJECT_TYPE_WAYPOINT, TAG_EXPLORE_WAYPOINT, GetLocation( oNPC), FALSE, TAG_EXPLORE_WAYPOINT);
+	location lDefaultLoc	= GetCombatControllerDefaultLocation( oCombatController, oNPC );
+	float fNewFace			= IntToFloat( Random( 180 ) ) + GetFacing( oNPC );
+	location lNewLoc		= GenerateNewLocation( oNPC, 0.0, fNewFace, fNewFace );
+	oWP						= CreateObject(OBJECT_TYPE_WAYPOINT, TAG_EXPLORE_WAYPOINT, lNewLoc, FALSE, TAG_EXPLORE_WAYPOINT);
 	string sWPUID			= GetObjectUniqueId( oWP );
+	//PrettyDebug( "CreateNewExploreWaypoint::NewFacing ="+FloatToString(fNewFace) );
 	//PrettyDebug( "######QualifyLocation::new WP "+sWPUID+"#######");
-	PrettyDebugObjectLocation( oWP, "blue" );
+	//PrettyDebugObjectLocation( oWP, "blue" );
 	AddToStorageObject( oCombatController, STORAGE_EXPLORE_WAYPOINTS, sWPUID, oWP );	
-	SetCombatControllerDefaultLocation( oCombatController, oWP );
 	return TRUE;
 }
 
@@ -253,8 +276,14 @@ int MoveToDestination( object oNPC ){
 	AssignCommand( oNPC, ActionForceMoveToLocation( lDestination, PARAM_EXPLORE_RUN, 60.0 ) );
 	
 	// Attempt to create Waypoint at current location
-	CreateNewExploreWaypoint( GetCombatControllerProxy( oNPC ), oNPC );
-	
+	object oCombatController = GetCombatControllerProxy( oNPC );
+	if( GetIsIndexExplorationWPLimitReached(oCombatController) && !GetIsMaxExplorationWPLimitReached( oCombatController ) ){
+		PrettyDebug( "MoveToDestination::TRYING TO LAY NEW WAYPOINT"+IntToString(GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS ))+"/"+IntToString(GetMaxExploreWP( oCombatController ) ));
+		CreateNewExploreWaypoint( GetCombatControllerProxy( oNPC ), oNPC );
+	}
+	else {
+		// PrettyDebug( "MaxExplorationWPLimitReached::"+IntToString(GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS ))+"/"+IntToString(GetMaxExploreWP( oCombatController ) ));
+	}
 	// Attemps to open surrounding doors
 	CheckNearbyDoors( oNPC );
 	

@@ -13,8 +13,9 @@ void main()
 	//
 	object oNPC = OBJECT_SELF;
 	//
+//PrettyDebug( "##### NEW NPC HEARTBEAT : " + ObjectToString( oNPC  )  );
 //PrettyDump( oNPC ) ;
-// PrettyDebug( "FATIGUE : " + FloatToString( GetFatigue( oNPC ) ) + " HUNGER : " + FloatToString( GetHunger( oNPC ) ) );
+//PrettyDebug( "FATIGUE : " + FloatToString( GetFatigue( oNPC ) ) + " HUNGER : " + FloatToString( GetHunger( oNPC ) ) );
 
 	UpdateNPC( oNPC );
 	//
