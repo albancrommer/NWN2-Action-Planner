@@ -66,6 +66,26 @@ int PrettyDebugWPStorage( object oCombatController, string sArrayName ){
 	return FALSE;
 
 }
+
+
+
+
+// **************************************************************
+// General exploration variables
+// **************************************************************
+
+
+
+// Returns size of WP storage
+int GetExploreWPCount( object oCombatController ){
+
+	int nExploreWPCount 			= GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	//PrettyDebug( "GetExploreWPCount::nExploreWPCount "+IntToString( nExploreWPCount ) );
+	return nExploreWPCount;
+	
+}
+
+
 // **************************************************************
 // Controller Data : variables
 // **************************************************************
@@ -281,16 +301,17 @@ object GetCombatControllerProxy( object oNPC ){
 // **************************************************************
 
 // Immediate Danger depends on the presence of actual enemies
-float SetImmediateDanger( object oCombatController){
+float SetNoImmediateDanger( object oCombatController){
 
-	float fImmediateDanger;
+	float fNoImmediateDanger;
 	if( GetEnemyCount( oCombatController ) ){ 
-		fImmediateDanger		= 1.0 ;
+		fNoImmediateDanger		= 0.01 ;
 	}
-	else fImmediateDanger		=0.5	 ;
-	SetLocalFloat( oCombatController, VAR_CDATA_DANGER, fImmediateDanger );
-	//PrettyDebug( "func::SetImmediateDanger:"+FloatToString(fImmediateDanger) );
-	return fImmediateDanger;
+	else fNoImmediateDanger		= 0.99;
+	
+	SetLocalFloat( oCombatController, VAR_CDATA_DANGER, fNoImmediateDanger );
+	PrettyDebug( "func::SetNoImmediateDanger:"+FloatToString(fNoImmediateDanger) );
+	return fNoImmediateDanger;
 
 }
 
@@ -315,13 +336,16 @@ float SetAreaKnowledge( object oCombatController){
 	int nMaxPoints			= GetTeamMaxExploreWPCount( oCombatController );
 
 	SetLocalInt( oCombatController, VAR_EXPLORE_MAX_WP, nMaxPoints ); 
+	
 	// Gets the current amount of WP layed by team on map
-	int nCurrentPoint 		= GetLocalInt( oCombatController, VAR_COUNT_RECO_POINTS );
+	int nCurrentPoint 		= GetExploreWPCount( oCombatController );
+	
+	PrettyDebug( "SetAreaKnowledge::nCurrentPoint="+IntToString(nCurrentPoint)+" nMaxPoints="+IntToString(nMaxPoints) );
 	
 	// Calculates the indice and stores it
 	float fAreaKnowledge    = _safeDivide( IntToFloat( nCurrentPoint ), IntToFloat( nMaxPoints ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_AREA_KNOW, fAreaKnowledge);
-	//PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
+	PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
 	return fAreaKnowledge;
 	
 }
@@ -372,7 +396,7 @@ float SetEnemyThreat( object oCombatController){
 // Controller strategies
 // **************************************************************
 
-// fImmediateDanger : fAreaKnowledge
+// fNoImmediateDanger : fAreaKnowledge
 float GetStrategyExplore( object oCombatController, float f1, float f2 ){
 
 	float fRes = CapDivide( f1, f2, 3.0 );
@@ -380,11 +404,11 @@ float GetStrategyExplore( object oCombatController, float f1, float f2 ){
 	return fRes;
 	
 }
-// fAreaKnowledge, fImmediateDanger
+// fAreaKnowledge, fNoImmediateDanger
 float GetStrategyAmbush( object oCombatController, float f1, float f2 ){
 
 	float fRes = CapDivide( f1, f2, 3.0 );
-	//PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 }
 
@@ -454,7 +478,7 @@ int RunControllerLoop( object oCombatController ){
 	GetEnemyData(oCombatController );
 	
 	// These methods are used to compute the team strategy
-	float fImmediateDanger 		= SetImmediateDanger(oCombatController); 
+	float fNoImmediateDanger 		= SetNoImmediateDanger(oCombatController); 
 	float fEnemyThreat 			= SetEnemyThreat(oCombatController);
 	float fPositionQuality 		= SetPositionQuality(oCombatController);
 	float fTeamMorale			= SetTeamMorale(oCombatController);
@@ -462,8 +486,8 @@ int RunControllerLoop( object oCombatController ){
 
 
 	// The highest of these indices determines the Strategy
-	float fIsStrategyExplore	= GetStrategyExplore( oCombatController, fImmediateDanger, fAreaKnowledge );
-	float fIsStrategyAmbush		= GetStrategyAmbush( oCombatController, fAreaKnowledge, fImmediateDanger);
+	float fIsStrategyExplore	= GetStrategyExplore( oCombatController, fNoImmediateDanger, fAreaKnowledge );
+	float fIsStrategyAmbush		= GetStrategyAmbush( oCombatController, fAreaKnowledge, fNoImmediateDanger);
 	float fIsStrategyTaunt		= GetStrategyTaunt( oCombatController, fTeamMorale, fEnemyThreat);
 	float fIsStrategyFlee		= GetStrategyFlee( oCombatController, fEnemyThreat, fTeamMorale);
 	float fIsStrategyReposition	= GetStrategyReposition( oCombatController, fEnemyThreat, fPositionQuality);
@@ -478,14 +502,16 @@ int RunControllerLoop( object oCombatController ){
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_REPOSITION, fIsStrategyReposition );	
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_ATTACK, fIsStrategyAttack );	
 	SortStorageFloat(oCombatController, STORAGE_COMBAT_STRATEGIES);
-	//PrettyDump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
+	PrettyDump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
 	string sStrategy 			= GetStorageLastVarName( oCombatController, STORAGE_COMBAT_STRATEGIES );
-	//PrettyDebug( "Current Strategy is : "+sStrategy );
+	PrettyDebug( "Current Strategy is : "+sStrategy );
 
 	PrettyDebugWPStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS);
 	return FALSE;
 	
 }
+
+
 
 // Defines the best tactical goal option for the NPC
 int AssignTacticalGoal( string sStrategy, object oNPC ){
@@ -495,29 +521,40 @@ int AssignTacticalGoal( string sStrategy, object oNPC ){
 	
 		// Single tactic : look around and try to qualify 
 		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_EXPLORE, 20.0 );
-		UpdateMotivationsLimit( oNPC, 20.0 );
 	
 	}else if( VAR_STRATEGY_AMBUSH == sStrategy ){
 	
 		// Tactic 1 : become hidden and position at low / hidden point
-		
 		// Tactic 2 : position at high point 
+		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_AMBUSH, 20.0 );
 	
 	}else if( VAR_STRATEGY_TAUNT == sStrategy ){
 
 		// Single tactic : Shout at the enemy
+		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_TAUNT, 20.0 );
 		
 	}else if( VAR_STRATEGY_FLEE == sStrategy ){
 	
+		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_FLEE, 20.0 );
+
 	}else if( VAR_STRATEGY_REPOSITION == sStrategy ){
 	
+		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_REPOSITION, 20.0 );
+
 	}else if( VAR_STRATEGY_ATTACK == sStrategy ){
 	
+		UpdateStorageFloat( oNPC, GOALS_ARRAY, GOAL_COMBAT_ATTACK, 20.0 );
+
 	}else if( INVALID == sStrategy ){
 	
+		PrettyDebug( "AssignTacticalGoal::ERROR Invalid strategy" );
+		return FALSE;
 	}
 	
-	return FALSE;
+	// With default motivation limit, this causes the NPC to stop looking for Goals
+	UpdateMotivationsLimit( oNPC, 10.0 );
+	
+	return TRUE;
 		 
 }
 

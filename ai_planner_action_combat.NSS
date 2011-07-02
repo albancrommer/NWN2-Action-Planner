@@ -18,6 +18,6 @@ void main() {
 	object oNPC				= OBJECT_SELF;
 	//
 	//AssignCommand( oNPC, ActionSpeakString( "I'm combating" ) );
-
+	
 
 }

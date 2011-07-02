@@ -118,6 +118,15 @@ int GetIsWalklineValid( object oNPC ){
 }
 
 
+// Returns size of WP storage
+int GetExploreWPCount( object oCombatController ){
+
+	int nExploreWPCount 			= GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	//PrettyDebug( "GetExploreWPCount::nExploreWPCount "+IntToString( nExploreWPCount ) );
+	return nExploreWPCount;
+	
+}
+
 // Returns the max amount of wp stored on the controller
 int GetMaxExploreWP( object oCombatController ){
 
