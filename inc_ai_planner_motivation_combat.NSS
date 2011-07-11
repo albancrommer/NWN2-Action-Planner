@@ -240,6 +240,10 @@ object CreateCombatController( object oNPC ){
 	GetStorage( oCombatController, STORAGE_TEAM_MEMBERS );
 	GetStorage( oCombatController, STORAGE_ENEMY_MEMBERS );
 	
+	// Construct the default max and min height
+	SetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX, -9999 );
+	SetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN, 9999 );
+	
 	return oCombatController;
 }
 
@@ -502,9 +506,9 @@ int RunControllerLoop( object oCombatController ){
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_REPOSITION, fIsStrategyReposition );	
 	AddToStorageFloat( oCombatController, STORAGE_COMBAT_STRATEGIES, VAR_STRATEGY_ATTACK, fIsStrategyAttack );	
 	SortStorageFloat(oCombatController, STORAGE_COMBAT_STRATEGIES);
-	PrettyDump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
+	//PrettyDump( GetStorage( oCombatController, STORAGE_COMBAT_STRATEGIES) );
 	string sStrategy 			= GetStorageLastVarName( oCombatController, STORAGE_COMBAT_STRATEGIES );
-	PrettyDebug( "Current Strategy is : "+sStrategy );
+	//PrettyDebug( "Current Strategy is : "+sStrategy );
 
 	PrettyDebugWPStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS);
 	return FALSE;

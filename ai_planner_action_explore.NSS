@@ -36,12 +36,25 @@ location GetCombatControllerDefaultLocation( object oCombatController, object oN
 	
 }
 
+
+// Instead of calculating a distance without taking the Z axis into account
+// I prefer comparing x and y for PARAM_CLOSE_ENOUGH
+int GetIsLocationNearEnough( location l1, location l2 ){
+
+	vector v = GetPositionFromLocation(l1) - GetPositionFromLocation(l2);
+ 	//PrettyDebug( "GetIsLocationNearEnough::"+VectorToString( v ) );
+	if( v.x <= PARAM_CLOSE_ENOUGH && v.y <= PARAM_CLOSE_ENOUGH )
+ 		return TRUE;
+		
+	return FALSE;
+}
+
 // Checks if oNPC is close enough from Destination
 int GetIsDestinationReached( object oNPC ){
 
 	location lDestination 		= GetLocalLocation( oNPC, VAR_EXPLORE_DESTINATION );
 	//PrettyDebugLocation( lDestination, "orange");
-	if( GetDistanceBetweenLocations( lDestination, GetLocation( oNPC ) ) < 1.0 ){
+	if( GetIsLocationNearEnough( lDestination, GetLocation( oNPC ) ) ){
 		//PrettyDebug( "GetIsDestinationReached::TRUE " );
 		return TRUE;
 	}
@@ -145,14 +158,14 @@ int GetIsIndexExplorationWPLimitReached(object oCombatController){
 
 	int nSearchIndex				= GetLocalInt( oCombatController, VAR_EXPLORE_CONT_INDEX );
 	if( nSearchIndex < PARAM_EXPLORE_MAX_DEPTH ){
-//		PrettyDebug( "GetIsIndexExplorationWPLimitReached::FALSE");
+//		//PrettyDebug( "GetIsIndexExplorationWPLimitReached::FALSE");
 		return FALSE;
 	}
 	// resets the index and the default location, so we're searching at a different angle
 	int nCurrentResetCount			= GetLocalInt( oCombatController, VAR_EXPLORE_RESET_COUNT );
 	if(  nCurrentResetCount < PARAM_EXPLORE_MAX_RESET ){
 	
-		PrettyDebug( "GetIsIndexExplorationWPLimitReached::LIMIT REACHED nCurrentResetCount:"+IntToString( nCurrentResetCount )+"/"+IntToString( PARAM_EXPLORE_MAX_RESET ));
+		//PrettyDebug( "GetIsIndexExplorationWPLimitReached::LIMIT REACHED nCurrentResetCount:"+IntToString( nCurrentResetCount )+"/"+IntToString( PARAM_EXPLORE_MAX_RESET ));
 		SetLocalInt( oCombatController, VAR_EXPLORE_RESET_COUNT, ++nCurrentResetCount );
 		SetLocalInt( oCombatController, VAR_EXPLORE_CONT_INDEX, 1);
 		location lOldLoc			= GetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC );
@@ -165,7 +178,7 @@ int GetIsIndexExplorationWPLimitReached(object oCombatController){
 		SetLocalLocation( oCombatController, VAR_COMB_CONT_DFLT_LOC, lDefaultLoc );
 		return FALSE;
 	}
-//	PrettyDebug( "GetIsIndexExplorationWPLimitReached::TRUE");
+//	//PrettyDebug( "GetIsIndexExplorationWPLimitReached::TRUE");
 	return TRUE;
 }
 
@@ -195,7 +208,7 @@ int GetNewDestination( object oNPC ){
 			float fAngle				= StringToFloat( sAngle ) + GetFacingFromLocation(lDefaultLocation) ;
 			string sDist				= Get2DAString( _2DA_EXPLORE, "distance", nSearchIndex );
 			float fDist					= StringToFloat( sDist ) * PARAM_COMBAT_ZONE_CHUNK;
-			PrettyDebug( "GetNewDestination::nSearchIndex #"+IntToString(nSearchIndex)+" sAngle:"+FloatToString(fAngle)+" sDist:"+FloatToString(fDist));
+			//PrettyDebug( "GetNewDestination::nSearchIndex #"+IntToString(nSearchIndex)+" sAngle:"+FloatToString(fAngle)+" sDist:"+FloatToString(fDist));
 			lDestination 				= GenerateNewLocation( oCombatController, fDist, fAngle, fAngle );
 			if( GetIsLocationValid( lDestination ) ){
 				//PrettyDebug( "GetNewDestination::VALID "+LocationToString(lDestination) );
@@ -234,7 +247,7 @@ int GetNewDestination( object oNPC ){
 // at oNPC location if the nearest waypoint  is invalid
 int CreateNewExploreWaypoint( object oCombatController, object oNPC ){
 	
-	//PrettyDebug( "()CreateNewExploreWaypoint::CALL");
+	//PrettyDebug( "##()CreateNewExploreWaypoint::CALL");
 	
 	// Checks if creation is allowed
 	if( GetIsMaxExplorationWPLimitReached( oCombatController ) ){
@@ -250,9 +263,12 @@ int CreateNewExploreWaypoint( object oCombatController, object oNPC ){
 	location lNewLoc		= GenerateNewLocation( oNPC, 0.0, fNewFace, fNewFace );
 	oWP						= CreateObject(OBJECT_TYPE_WAYPOINT, TAG_EXPLORE_WAYPOINT, lNewLoc, FALSE, TAG_EXPLORE_WAYPOINT);
 	string sWPUID			= GetObjectUniqueId( oWP );
-	//PrettyDebug( "CreateNewExploreWaypoint::NewFacing ="+FloatToString(fNewFace) );
-	//PrettyDebug( "######QualifyLocation::new WP "+sWPUID+"#######");
+	//PrettyDebug( "##CreateNewExploreWaypoint::NewFacing ="+FloatToString(fNewFace) );
+	//PrettyDebug( "##CreateNewExploreWaypoint::new WP "+sWPUID+" @"+LocationToString( lNewLoc ) +"#######");
 	//PrettyDebugObjectLocation( oWP, "blue" );
+	
+	// We're setting an arbitrary really low value for the var used in QualifyLocationDig
+	SetLocalFloat( oWP, VAR_COMB_WP_HEIGHT_RATIO, -1.0);
 	AddToStorageObject( oCombatController, STORAGE_EXPLORE_WAYPOINTS, sWPUID, oWP );	
 	return TRUE;
 }
@@ -269,11 +285,11 @@ int MoveToDestination( object oNPC ){
 	// Attempt to create Waypoint at current location
 	object oCombatController = GetCombatControllerProxy( oNPC );
 	if( GetIsIndexExplorationWPLimitReached(oCombatController) && !GetIsMaxExplorationWPLimitReached( oCombatController ) ){
-		PrettyDebug( "MoveToDestination::TRYING TO LAY NEW WAYPOINT"+IntToString(GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS ))+"/"+IntToString(GetMaxExploreWP( oCombatController ) ));
+		//PrettyDebug( "MoveToDestination::TRYING TO LAY NEW WAYPOINT"+IntToString(GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS ))+"/"+IntToString(GetMaxExploreWP( oCombatController ) ));
 		CreateNewExploreWaypoint( GetCombatControllerProxy( oNPC ), oNPC );
 	}
 	else {
-		// PrettyDebug( "MaxExplorationWPLimitReached::"+IntToString(GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS ))+"/"+IntToString(GetMaxExploreWP( oCombatController ) ));
+		// //PrettyDebug( "MaxExplorationWPLimitReached::"+IntToString(GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS ))+"/"+IntToString(GetMaxExploreWP( oCombatController ) ));
 	}
 	// Attemps to open surrounding doors
 	CheckNearbyDoors( oNPC );
@@ -287,6 +303,102 @@ object GetNearestExplorationWaypoint( object oNPC){
 
 	return GetNearestObjectByTag( TAG_EXPLORE_WAYPOINT );
 
+}
+
+// VAR_COMB_WP_HEIGHT
+// VAR_COMB_WP_HEIGHT_RATIO
+// VAR_COMB_CONT_HEIGHT_MIN
+// VAR_COMB_CONT_HEIGHT_MAX
+// VAR_COMB_CONT_WP_AMBUSH
+// VAR_COMB_CONT_WP_RANGED
+// VAR_COMB_CONT_WP_TAUNT
+
+// Applies a new quality ratio to the combat controller waypoints
+// Ratio = -( (nMin - nCur) / (nMax - nMin ) )
+// Ex : nMax:100, nMin:-100, nCur:50 => ratio of -(-150/200) ie. 0.75
+// 1.0 is the max
+// 0.0 is the min
+// -1.0 is default <=> not computed
+int QualifyLocationRefactorWP( object oCombatController ){
+
+	PrettyDebug( "QualifyLocationRefactorWP::Running ");
+	object oWP;
+	object oStorage	= GetStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	int nCount 		= GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	int nI;
+	float fHeightRatio; // Current heigtht ratio 
+	int nCur; // Current height 
+	int nDiff; // - ( nMin - nCur )
+	
+	// Retrieve height span at controller level
+	int nMax			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX );
+	int nMin			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN );
+	int nTotalDiff		= nMax - nMin;
+	
+	for( nI = 0; nI < nCount; nI++){
+	
+		oWP 			= GetVariableValueObject( oStorage, nI );
+		nCur 			= GetLocalInt( oWP, VAR_COMB_WP_HEIGHT );
+		nDiff			= 0 - ( nMin - nCur );
+		fHeightRatio	= _safeDivide( IntToFloat( nDiff ),IntToFloat( nTotalDiff )) ;
+		SetLocalFloat( oWP, VAR_COMB_WP_HEIGHT_RATIO, fHeightRatio );
+		PrettyDebug( "QualifyLocationRefactorWP::height="+IntToString(nCur)+">Ratio="+FloatToString(fHeightRatio)+"("+IntToString(nDiff)+"/"+IntToString(nTotalDiff)+")" );
+	}
+
+	return FALSE;
+
+
+
+}
+
+// Qualifies a waypoint's height and refactors all the waypoints
+int QualifyLocationDigHeight( object oWP, object oCombatController ){
+
+	PrettyDebug( "QualifyLocationDigHeight::Running ");
+	// Retrieve and store on WP its height
+	vector pWP 			= GetPosition( oWP );
+	int nZ				= FloatToInt( pWP.z );
+	SetLocalInt( oWP, VAR_COMB_WP_HEIGHT, nZ );
+	
+	// Compare and store on controller
+	int nMax			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX );
+	int nMin			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN );
+	if( nZ >= nMax ) {
+		PrettyDebug( "QualifyLocationDigHeight::SetMax at "+IntToString(nZ) );
+		SetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX, nZ );
+	}
+	if( nZ < nMin ) { 
+		PrettyDebug( "QualifyLocationDigHeight::Setin at "+IntToString(nZ) );
+		SetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN, nZ );
+	}
+	
+	// Refactor all waypoints
+	QualifyLocationRefactorWP( oCombatController );
+
+	return FALSE;
+}
+
+
+// Qualifies a waypoint's height and refactors all the waypoints
+int QualifyLocationDigPosition( object oNPC, object oWP, object oCombatController ){
+	PrettyDebug( "QualifyLocationDigPosition::Running ");
+	return TRUE;
+}
+// Check around and see what we got
+int QualifyLocationDig( object oNPC, object oWP, object oCombatController ){
+	
+
+	// Qualify height
+	if( -1.0 == GetLocalFloat( oWP, VAR_COMB_WP_HEIGHT_RATIO ) ){
+	
+		QualifyLocationDigHeight( oWP, oCombatController);
+		return TRUE;
+	}
+	
+	// Qualify potential position interest
+		QualifyLocationDigPosition( oNPC, oWP, oCombatController);
+		return TRUE;
+	
 }
 
 // Performs the qualification 
@@ -312,7 +424,9 @@ int QualifyLocation( object oNPC, int bInitQualify = FALSE ){
 		return FALSE;
 	}
 	
-	// Dig more
+	// Dig it
+	QualifyLocationDig( oNPC, oWP, oCombatController );
+	
 	
 	return FALSE;
 	
