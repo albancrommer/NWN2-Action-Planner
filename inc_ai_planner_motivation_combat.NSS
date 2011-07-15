@@ -86,6 +86,19 @@ int GetExploreWPCount( object oCombatController ){
 }
 
 
+// Increments a counter on combat controller to throttle the total amount of explorations
+int GetMaxExplorationReached( object oCombatController ){
+
+	int nNth	= GetLocalInt( oCombatController, VAR_NTH_EXPLORATION );
+	SetLocalInt( oCombatController, VAR_NTH_EXPLORATION, ++nNth);
+	//PrettyDebug( "GetMaxExplorationReached::Nth search:"+IntToString( nNth ));
+	if( nNth >= PARAM_MAX_EXPLORATION ){
+		return TRUE;
+	}else{
+		return FALSE;
+	}
+
+}
 // **************************************************************
 // Controller Data : variables
 // **************************************************************
@@ -314,7 +327,7 @@ float SetNoImmediateDanger( object oCombatController){
 	else fNoImmediateDanger		= 0.99;
 	
 	SetLocalFloat( oCombatController, VAR_CDATA_DANGER, fNoImmediateDanger );
-	PrettyDebug( "func::SetNoImmediateDanger:"+FloatToString(fNoImmediateDanger) );
+	//PrettyDebug( "func::SetNoImmediateDanger:"+FloatToString(fNoImmediateDanger) );
 	return fNoImmediateDanger;
 
 }
@@ -337,6 +350,13 @@ int GetTeamMaxExploreWPCount( object oCombatController ){
 // Area Knowledge is determined by nActualRecoWP / nMaxRecoWP
 float SetAreaKnowledge( object oCombatController){
 
+	// Check if limit of total exploration cycles  reached
+	if( GetMaxExplorationReached( oCombatController ) ){
+		PrettyDebug( "SetAreaKnowledge::LIMIT OF EXPLORATION CYCLES REACHED ");
+		return 1.0;
+	}
+	
+
 	int nMaxPoints			= GetTeamMaxExploreWPCount( oCombatController );
 
 	SetLocalInt( oCombatController, VAR_EXPLORE_MAX_WP, nMaxPoints ); 
@@ -344,12 +364,12 @@ float SetAreaKnowledge( object oCombatController){
 	// Gets the current amount of WP layed by team on map
 	int nCurrentPoint 		= GetExploreWPCount( oCombatController );
 	
-	PrettyDebug( "SetAreaKnowledge::nCurrentPoint="+IntToString(nCurrentPoint)+" nMaxPoints="+IntToString(nMaxPoints) );
+	//PrettyDebug( "SetAreaKnowledge::nCurrentPoint="+IntToString(nCurrentPoint)+" nMaxPoints="+IntToString(nMaxPoints) );
 	
 	// Calculates the indice and stores it
 	float fAreaKnowledge    = _safeDivide( IntToFloat( nCurrentPoint ), IntToFloat( nMaxPoints ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_AREA_KNOW, fAreaKnowledge);
-	PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
+	//PrettyDebug( "func::SetAreaKnowledge:"+FloatToString(fAreaKnowledge) );
 	return fAreaKnowledge;
 	
 }
@@ -412,7 +432,7 @@ float GetStrategyExplore( object oCombatController, float f1, float f2 ){
 float GetStrategyAmbush( object oCombatController, float f1, float f2 ){
 
 	float fRes = CapDivide( f1, f2, 3.0 );
-	PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	//PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 }
 

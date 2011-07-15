@@ -182,6 +182,8 @@ int GetIsIndexExplorationWPLimitReached(object oCombatController){
 	return TRUE;
 }
 
+
+
 // Retrieves a new Destination from the controller
 int GetNewDestination( object oNPC ){
 
@@ -321,7 +323,7 @@ object GetNearestExplorationWaypoint( object oNPC){
 // -1.0 is default <=> not computed
 int QualifyLocationRefactorWP( object oCombatController ){
 
-	PrettyDebug( "QualifyLocationRefactorWP::Running ");
+	//PrettyDebug( "QualifyLocationRefactorWP::Running ");
 	object oWP;
 	object oStorage	= GetStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
 	int nCount 		= GetStorageCount( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
@@ -334,7 +336,6 @@ int QualifyLocationRefactorWP( object oCombatController ){
 	int nMax			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX );
 	int nMin			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN );
 	int nTotalDiff		= nMax - nMin;
-	
 	for( nI = 0; nI < nCount; nI++){
 	
 		oWP 			= GetVariableValueObject( oStorage, nI );
@@ -342,7 +343,7 @@ int QualifyLocationRefactorWP( object oCombatController ){
 		nDiff			= 0 - ( nMin - nCur );
 		fHeightRatio	= _safeDivide( IntToFloat( nDiff ),IntToFloat( nTotalDiff )) ;
 		SetLocalFloat( oWP, VAR_COMB_WP_HEIGHT_RATIO, fHeightRatio );
-		PrettyDebug( "QualifyLocationRefactorWP::height="+IntToString(nCur)+">Ratio="+FloatToString(fHeightRatio)+"("+IntToString(nDiff)+"/"+IntToString(nTotalDiff)+")" );
+		//PrettyDebug( "QualifyLocationRefactorWP::height="+IntToString(nCur)+">Ratio="+FloatToString(fHeightRatio)+"("+IntToString(nDiff)+"/"+IntToString(nTotalDiff)+")" );
 	}
 
 	return FALSE;
@@ -354,21 +355,21 @@ int QualifyLocationRefactorWP( object oCombatController ){
 // Qualifies a waypoint's height and refactors all the waypoints
 int QualifyLocationDigHeight( object oWP, object oCombatController ){
 
-	PrettyDebug( "QualifyLocationDigHeight::Running ");
+	//PrettyDebug( "QualifyLocationDigHeight::Running ");
 	// Retrieve and store on WP its height
 	vector pWP 			= GetPosition( oWP );
 	int nZ				= FloatToInt( pWP.z );
 	SetLocalInt( oWP, VAR_COMB_WP_HEIGHT, nZ );
-	
+	'
 	// Compare and store on controller
 	int nMax			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX );
 	int nMin			= GetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN );
 	if( nZ >= nMax ) {
-		PrettyDebug( "QualifyLocationDigHeight::SetMax at "+IntToString(nZ) );
+		//PrettyDebug( "QualifyLocationDigHeight::SetMax at "+IntToString(nZ) );
 		SetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MAX, nZ );
 	}
 	if( nZ < nMin ) { 
-		PrettyDebug( "QualifyLocationDigHeight::Setin at "+IntToString(nZ) );
+		//PrettyDebug( "QualifyLocationDigHeight::SetMin at "+IntToString(nZ) );
 		SetLocalInt( oCombatController, VAR_COMB_CONT_HEIGHT_MIN, nZ );
 	}
 	
@@ -379,11 +380,132 @@ int QualifyLocationDigHeight( object oWP, object oCombatController ){
 }
 
 
-// Qualifies a waypoint's height and refactors all the waypoints
+
+
+
+// Returns N chunks separating oWP1 from oWP2
+int GetStepsBetweenExlorationWaypoints( object oWP1, object oWP2 ){
+
+	if( !GetIsObjectValid( oWP1 )||!GetIsObjectValid( oWP2 )){
+		return FALSE;
+	}
+	float fDist = GetDistanceBetween( oWP1, oWP2 );
+	int nChunks	= FloatToInt( fDist / PARAM_COMBAT_ZONE_CHUNK );
+	return nChunks;
+
+}
+
+// Qualifies WP for ambush position
+// A good ambush position has freedom of movement and is relatively low
+// so it is qualified by fSurroundingQuality / fHeightQuality
+// Plus, it should be close to the ranged combat position
+// So it shall be divided by the amount of "steps" separating both
+// Ex: 8 surrounding, and low give ( 8/8 ) / 0.1 => 10 score
+// Ex: 2 surrounding and middle high give ( 2/8 ) / 0.5 => 0.5 score 
+int QualifyLocationDigPositionAmbush(object oWP, object oCombatController ){
+
+	// Get the quality score for current WP and store it on WP
+	float nSurroundingWPQuality	= GetLocalFloat( oWP, VAR_QUALIFY_SURROUND_WP );
+	float fHeightQuality		= GetLocalFloat( oWP, VAR_COMB_WP_HEIGHT_RATIO );
+	float fQuality 				= _safeDivide( nSurroundingWPQuality, fHeightQuality );
+	object oRangedWP			= GetLocalObject( oCombatController, VAR_QUALIFY_RANGED_WP );
+	int nChunks					= GetStepsBetweenExlorationWaypoints( oWP, oRangedWP );
+	if( nChunks ){
+		fQuality				= fQuality / nChunks;						
+	}
+	SetLocalFloat( oWP, VAR_QUALIFY_AMBUSH, fQuality );
+	
+	// Compare this score with the one of the object currently stored on controller
+	object oAmbushWP			= GetLocalObject( oCombatController, VAR_QUALIFY_AMBUSH_WP );
+	if( !GetIsObjectValid( oAmbushWP ) ){
+		PrettyDebug( "QualifyLocationDigPositionAmbush::Invalid ref :"+FloatToString( fQuality )); 
+		SetLocalObject( oCombatController, VAR_QUALIFY_AMBUSH_WP, oWP  );
+	}
+	else if( GetLocalFloat( oAmbushWP, VAR_QUALIFY_AMBUSH ) <= fQuality ){
+		PrettyDebug( "QualifyLocationDigPositionAmbush::Better Quality :"+FloatToString( fQuality )); 
+		SetLocalObject( oCombatController, VAR_QUALIFY_AMBUSH_WP, oWP  );
+	}
+	else PrettyDebug( "QualifyLocationDigPositionAmbush::Inferior Quality :"+FloatToString( fQuality ));
+	return FALSE;
+	
+}
+
+// Qualifies WP for ranged position
+// A good ranged position has low freedom of movement and is relatively high
+// so it is qualified by fHeightQuality / fSurroundingQuality 
+// Ex: 8 surrounding, and low give   0.1 / ( 8/8 ) => 0.1 score
+// Ex: 2 surrounding and middle high give  0.5 / ( 2/8 )=> 2 score 
+int QualifyLocationDigPositionRanged(object oWP, object oCombatController ){
+
+	// Get the quality score for current WP and store it on WP
+	float nSurroundingWPQuality	= GetLocalFloat( oWP, VAR_QUALIFY_SURROUND_WP );
+	float fHeightQuality		= GetLocalFloat( oWP, VAR_COMB_WP_HEIGHT_RATIO );
+	float fQuality 				= _safeDivide( fHeightQuality, nSurroundingWPQuality );
+	SetLocalFloat( oWP, VAR_QUALIFY_RANGED, fQuality );
+	
+	// Compare this score with the one of the object currently stored on controller
+	object oRangedWP			= GetLocalObject( oCombatController, VAR_QUALIFY_RANGED_WP );
+	if( !GetIsObjectValid( oRangedWP ) ){
+		PrettyDebug( "QualifyLocationDigPositionRanged::Invalid ref :"+FloatToString( fQuality )); 
+		SetLocalObject( oCombatController, VAR_QUALIFY_RANGED_WP, oWP  );
+	}
+	else if( GetLocalFloat( oRangedWP, VAR_QUALIFY_RANGED ) <= fQuality ){
+		PrettyDebug( "QualifyLocationDigPositionRanged::Better Quality :"+FloatToString( fQuality )); 
+		SetLocalObject( oCombatController, VAR_QUALIFY_RANGED_WP, oWP  );
+	}
+	else PrettyDebug( "QualifyLocationDigPositionRanged::Inferior Quality :"+FloatToString( fQuality ));
+	return FALSE;
+}
+
+// Counts surrounding exploration waypoints
+int QualifyLocationDigPositionSurroundWP(object oWP, object oCombatController ){
+
+	float fDist;
+	int nNth 			= 1;
+	int nCount 			= 0;
+	object oSearchWP 	= GetNearestObjectByTag( TAG_EXPLORE_WAYPOINT, oWP, nNth );
+	while( GetIsObjectValid( oSearchWP ) ){
+		//PrettyDebug( "QualifyLocationDigPositionSurroundWP::nNth = "+IntToString(nNth)); 
+		fDist = GetDistanceBetween( oSearchWP, oWP );
+		if( fDist <= ( PARAM_COMBAT_ZONE_CHUNK + 1.0 ) ){
+		 	nCount++;
+			oSearchWP 	= GetNearestObjectByTag( TAG_EXPLORE_WAYPOINT, oWP, ++nNth );
+		}else{
+			oSearchWP 	= OBJECT_INVALID;
+		}
+	}
+	
+	// We want to avoid null divisors
+	if( 0 == nCount ) nCount = 1;
+	
+	float fQuality		= IntToFloat( nCount ) / 8;
+	//PrettyDebug( "QualifyLocationDigPositionSurroundWP::WP Quality :"+FloatToString( fQuality )); 
+	SetLocalFloat( oWP, VAR_QUALIFY_SURROUND_WP, fQuality );
+	return nCount;
+
+}
+
+
+// Qualifies a waypoint's quality for various positional advantage
 int QualifyLocationDigPosition( object oNPC, object oWP, object oCombatController ){
-	PrettyDebug( "QualifyLocationDigPosition::Running ");
+	
+	
+	// Count immediately surrounding exploration wp, max of 8 as in :
+	// . . . 
+	// . x .
+	// . . .
+	QualifyLocationDigPositionSurroundWP( oWP, oCombatController );
+	
+	// Run utility function for each position type and compare the result with the current
+	// controller's WP of preference for the given type
+	QualifyLocationDigPositionAmbush( oWP, oCombatController );
+	QualifyLocationDigPositionRanged( oWP, oCombatController );
+	
+	
 	return TRUE;
 }
+
+
 // Check around and see what we got
 int QualifyLocationDig( object oNPC, object oWP, object oCombatController ){
 	
@@ -410,6 +532,7 @@ int QualifyLocation( object oNPC, int bInitQualify = FALSE ){
 		return FALSE;
 	}
 	
+
 	// Create waypoint if not around
 	if( bInitQualify){
 		//PrettyDebug( "QualifyLocation::bInitQualify TRUE ");

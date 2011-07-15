@@ -12,9 +12,10 @@ const float 	PARAM_COMBAT_ZONE_CHUNK	= 17.0; // The base distance used for explo
 const float 	PARAM_WALKLINE_DIST		= 5.0; // Iterated distance to detect invalid locations 
 const int		PARAM_EXPLORE_MAX_DEPTH	= 49; // # of lines in ai_planner_explore.2DA 
 const int		PARAM_EXPLORE_MAX_RESET	= 1; // # of times you iterate the search 
-const int		PARAM_EXPLORE_QUAL_ROUNDS	= 0; // # of rounds spent qualifying points
+const int		PARAM_EXPLORE_QUAL_ROUNDS	= 1; // # of rounds spent qualifying points
 const int		PARAM_EXPLORE_RUN		= TRUE; // Has NPC run when exploring if TRUE
 const int		PARAM_MAX_ROUNDS_BLOCKED= 2; // # of rounds an NPC is allowed to stay blocked
+const int		PARAM_MAX_EXPLORATION	= 100; // # of times a team will try to qualify points on an area
 const int		PARAM_WALKLINE_DEPTH	= 3; // # of iterations used to detect invalid locations
 const float 	PARAM_CLOSE_ENOUGH		= 1.0; // Iterated distance to detect invalid locations 
 
@@ -79,8 +80,15 @@ const string 	VAR_EXPLORE_QUAL_ROUNDS	= "VAR_EXPLORE_QUAL_ROUNDS";
 const string 	VAR_EXPLORE_RESET_COUNT	= "VAR_EXPLORE_RESET_COUNT";
 const string 	VAR_FORCED_COMBAT	 	= "VAR_FORCED_COMBAT";
 const string 	VAR_FORCED_COMBAT_DIST	= "VAR_FORCED_COMBAT_DIST";
+const string 	VAR_NTH_EXPLORATION		= "VAR_NTH_EXPLORATION"; // The combat controller quantity of exploration attempts
 const string 	VAR_OBJ_COMB_CONT		= "VAR_OBJ_COMB_CONT"; // The combat controller var on each NPC
 const string 	VAR_PREVIOUS_LOCATION	= "VAR_PREVIOUS_LOCATION"; // Stores its previous location on NPC
+const string 	VAR_QUALIFY_AMBUSH		= "VAR_QUALIFY_AMBUSH";
+const string 	VAR_QUALIFY_AMBUSH_WP	= "VAR_QUALIFY_AMBUSH_WP";
+const string 	VAR_QUALIFY_RANGED	 	= "VAR_QUALIFY_RANGED";
+const string 	VAR_QUALIFY_RANGED_WP	= "VAR_QUALIFY_RANGED_WP";
+const string 	VAR_QUALIFY_SURROUND_WP	= "VAR_QUALIFY_SURROUND_WP";
+
 const string 	VAR_ROUNDS_BLOCKED		= "VAR_ROUNDS_BLOCKED"; // Stores # of rounds NPC is blocked at one place
 const string 	VAR_STRATEGY_AMBUSH		= "VAR_STRATEGY_AMBUSH";
 const string 	VAR_STRATEGY_ATTACK		= "VAR_STRATEGY_ATTACK";
@@ -90,3 +98,9 @@ const string 	VAR_STRATEGY_REPOSITION	= "VAR_STRATEGY_REPOSITION";
 const string 	VAR_STRATEGY_TAUNT	 	= "VAR_STRATEGY_TAUNT";
 const string 	VAR_TEAM_COUNT			= "VAR_TEAM_COUNT";
 const string 	WORLDSTATE	 			= "WORLDSTATE";
+
+
+
+
+
+
