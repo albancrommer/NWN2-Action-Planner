@@ -18,5 +18,8 @@ void main()
 	// strategies. 
 	// @see: inc_ai_planner_motivation_combat
 	RunControllerLoop( oCombatController );
-	
+	object oRangedWP			= GetLocalObject( oCombatController, VAR_QUALIFY_RANGED_WP );
+	object oAmbushWP			= GetLocalObject( oCombatController, VAR_QUALIFY_AMBUSH_WP );
+	PrettyDebugObjectLocation( oRangedWP, "blue");
+	PrettyDebugObjectLocation( oAmbushWP, "orange");
 }

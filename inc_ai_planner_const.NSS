@@ -48,6 +48,8 @@ const string 	STORAGE_ENEMY_MEMBERS 	= "STORAGE_ENEMY_MEMBERS";
 const string 	STORAGE_EXPLORE_WAYPOINTS = "STORAGE_EXPLORE_WAYPOINTS";
 const string 	STORAGE_TEAM_MEMBERS 	= "STORAGE_TEAM_MEMBERS";
 const string 	TAG_COMBAT_CONTROLLER	= "ai_planner_combat_controller";
+const string 	TAG_DEFAULT_WP			= "nw_waypoint001";
+
 const string 	TAG_EXPLORE_WAYPOINT	= "ai_planner_explore_wp";
 const string 	TAG_FORCED_COMBAT_WP	= "ai_planner_forced_combat";
 const string 	TARGET	 				= "TARGET";
@@ -65,21 +67,27 @@ const string 	VAR_COMB_WP_HEIGHT		= "VAR_COMB_WP_HEIGHT";
 const string 	VAR_COMB_WP_HEIGHT_RATIO = "VAR_COMB_WP_HEIGHT_RATIO";
 const string 	VAR_COMB_CONT_HEIGHT_MIN = "VAR_COMB_CONT_HEIGHT_MIN";
 const string 	VAR_COMB_CONT_HEIGHT_MAX = "VAR_COMB_CONT_HEIGHT_MAX";
-const string 	VAR_COMB_CONT_WP_AMBUSH	= "VAR_COMB_CONT_WP_AMBUSH";
-const string 	VAR_COMB_CONT_WP_RANGED	= "VAR_COMB_CONT_WP_RANGED";
-const string 	VAR_COMB_CONT_WP_TAUNT	= "VAR_COMB_CONT_WP_TAUNT";
+//const string 	VAR_COMB_CONT_WP_AMBUSH	= "VAR_COMB_CONT_WP_AMBUSH"; 
+//const string 	VAR_COMB_CONT_WP_RANGED	= "VAR_COMB_CONT_WP_RANGED";
+//const string 	VAR_COMB_CONT_WP_TAUNT	= "VAR_COMB_CONT_WP_TAUNT";
 const string 	VAR_CONTROLLER_FACTION	= "VAR_CONTROLLER_FACTION";
 const string 	VAR_COUNT_ALL			= "VAR_COUNT_ALL";
 const string 	VAR_COUNT_DEAD			= "VAR_COUNT_DEAD";
 const string 	VAR_COUNT_RECO_POINTS	= "VAR_COUNT_RECO_POINTS";
+const string 	VAR_COUNT_SURROUND_WP	= "VAR_COUNT_SURROUND_WP";
+
 const string 	VAR_ENEMY_COUNT			= "VAR_TEAM_COUNT";
 const string 	VAR_EXPLORE_CONT_INDEX	= "VAR_EXPLORE_CONT_INDEX";
-const string 	VAR_EXPLORE_DESTINATION	= "VAR_EXPLORE_DESTINATION";
+const string 	VAR_MOVEMENT_DESTINATION = "VAR_MOVEMENT_DESTINATION";
 const string 	VAR_EXPLORE_MAX_WP		= "VAR_EXPLORE_MAX_WP";
 const string 	VAR_EXPLORE_QUAL_ROUNDS	= "VAR_EXPLORE_QUAL_ROUNDS";
 const string 	VAR_EXPLORE_RESET_COUNT	= "VAR_EXPLORE_RESET_COUNT";
 const string 	VAR_FORCED_COMBAT	 	= "VAR_FORCED_COMBAT";
 const string 	VAR_FORCED_COMBAT_DIST	= "VAR_FORCED_COMBAT_DIST";
+const string 	VAR_HAS_ROLE_AMBUSH		= "VAR_HAS_ROLE_AMBUSH";
+const string 	VAR_HAS_ROLE_BUFFER		= "VAR_HAS_ROLE_BUFFER";
+const string 	VAR_HAS_ROLE_CASTER		= "VAR_HAS_ROLE_CASTER";
+const string 	VAR_HAS_ROLE_RANGED		= "VAR_HAS_ROLE_RANGED";
 const string 	VAR_NTH_EXPLORATION		= "VAR_NTH_EXPLORATION"; // The combat controller quantity of exploration attempts
 const string 	VAR_OBJ_COMB_CONT		= "VAR_OBJ_COMB_CONT"; // The combat controller var on each NPC
 const string 	VAR_PREVIOUS_LOCATION	= "VAR_PREVIOUS_LOCATION"; // Stores its previous location on NPC
@@ -87,7 +95,7 @@ const string 	VAR_QUALIFY_AMBUSH		= "VAR_QUALIFY_AMBUSH";
 const string 	VAR_QUALIFY_AMBUSH_WP	= "VAR_QUALIFY_AMBUSH_WP";
 const string 	VAR_QUALIFY_RANGED	 	= "VAR_QUALIFY_RANGED";
 const string 	VAR_QUALIFY_RANGED_WP	= "VAR_QUALIFY_RANGED_WP";
-const string 	VAR_QUALIFY_SURROUND_WP	= "VAR_QUALIFY_SURROUND_WP";
+const string 	VAR_QUALIFY_SURROUND_WP	= "VAR_QUALIFY_SURROUND_WP"; // Stores the # of surrounding exploration wp
 
 const string 	VAR_ROUNDS_BLOCKED		= "VAR_ROUNDS_BLOCKED"; // Stores # of rounds NPC is blocked at one place
 const string 	VAR_STRATEGY_AMBUSH		= "VAR_STRATEGY_AMBUSH";
@@ -98,9 +106,6 @@ const string 	VAR_STRATEGY_REPOSITION	= "VAR_STRATEGY_REPOSITION";
 const string 	VAR_STRATEGY_TAUNT	 	= "VAR_STRATEGY_TAUNT";
 const string 	VAR_TEAM_COUNT			= "VAR_TEAM_COUNT";
 const string 	WORLDSTATE	 			= "WORLDSTATE";
-
-
-
 
 
 

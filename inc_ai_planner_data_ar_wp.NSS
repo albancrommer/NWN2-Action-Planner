@@ -253,9 +253,8 @@ object GetStorageObject( object oObject, string sArrayId, string sVar ) {
 
 
 	object oA 			= GetStorage( oObject, sArrayId );
-	//
-	if( !GetIsObjectValid( oA ) ) return OBJECT_INVALID;
-	//
+	if( !GetIsObjectValid( oA ) ) 
+		return OBJECT_INVALID;
 	return GetLocalObject( oA, sVar );
 
 }
