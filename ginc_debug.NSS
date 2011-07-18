@@ -223,7 +223,7 @@ void PrettyDump( object oO )
 	//
 	for( i=0; i<nC; i++)
 		//
-		PrettyDebug( "Var[" + IntToString(i)+"] " +GetVariableName(oO,i) + " = " +  IntToString(GetVariableValueInt(oO,i)) + " / " + FloatToString(GetVariableValueFloat(oO,i)) + " / " +  GetVariableValueString( oO, i )+ " / " +  GetTag( GetVariableValueObject( oO, i ) ) );
+		PrettyDebug( "Var[" + IntToString(i)+"] " +GetVariableName(oO,i) + " = " +  IntToString(GetVariableValueInt(oO,i)) + " / " + FloatToString(GetVariableValueFloat(oO,i)) + " / " +  GetVariableValueString( oO, i )+ " / " +  GetName( GetVariableValueObject( oO, i ) ) );
 }
 
 
@@ -272,4 +272,3 @@ void PrettyDebugLocation( location lLoc, string sColor = "yellow" )
 	//
 	ApplyEffectAtLocation( DURATION_TYPE_TEMPORARY, eEffect, lLoc, 2.0 );
 }
-

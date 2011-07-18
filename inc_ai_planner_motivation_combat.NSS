@@ -6,6 +6,7 @@
 // Name_Date
 
 
+
 #include "inc_ai_planner_const"
 #include "inc_ai_planner_datacontroller"
 #include "inc_ai_planner_locomotion"
@@ -16,6 +17,9 @@
 
 int QualifyLocationDigPositionSurroundWP(object oWP, object oCombatController );
 
+object GetCombatControllerProxy( object oNPC );
+int	GetCombatControllerFlagHarmed( object oCombatController );
+int	GetCombatControllerFlagPerceived( object oCombatController );
 
 
 // **************************************************************
@@ -106,6 +110,12 @@ int GetMaxExplorationReached( object oCombatController ){
 // Controller Data : variables
 // **************************************************************
 
+// ##############################
+// 
+// ##############################
+
+
+
 
 // Reads the storage to retrieve the quantity of team members
 int SetTeamCount( object oCombatController ){
@@ -192,19 +202,22 @@ int GetEnemyData( object oCombatController ){
 
 
 
-// Adds PC to controller
-int TargetAddToCombatController( object oCombatController, object oNPC ){
+// Adds PC to oNPC controller
+int AddToCombatControllerEnemy( object oNPC, object oCreature ){
 
-
-	return TRUE;
+	object oCombatController 	= GetCombatControllerProxy( oNPC );
+	string sVar					= GetObjectUniqueId( oCreature );
+	return AddToStorageObject( oCombatController, STORAGE_ENEMY_MEMBERS, sVar, oCreature );
 
 }
 
 
 // Removes PC from controller
-int TargetRemoveFromCombatController( object oCombatController, object oNPC ){
+int RemoveFromCombatControllerEnemy( object oNPC, object oCreature ){
 
-	return TRUE;
+	object oCombatController 	= GetCombatControllerProxy( oNPC );
+	string sVar					= GetObjectUniqueId( oCreature );
+	return DeleteStorageLocalObject( oCombatController, STORAGE_ENEMY_MEMBERS, sVar );
 
 }
 
@@ -321,13 +334,27 @@ object GetCombatControllerProxy( object oNPC ){
 // **************************************************************
 
 // Immediate Danger depends on the presence of actual enemies
+// High value ( 1.0 ) = no Danger
+// Low value ( 0.01 ) = Danger
 float SetNoImmediateDanger( object oCombatController){
 
+
 	float fNoImmediateDanger;
-	if( GetEnemyCount( oCombatController ) ){ 
+
+/*	if( GetEnemyCount( oCombatController ) ){ 
 		fNoImmediateDanger		= 0.01 ;
 	}
 	else fNoImmediateDanger		= 0.99;
+	*/
+		
+	if( GetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_HARM ) ){
+		fNoImmediateDanger		= 0.01 ;
+	}
+	else if( GetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_PERC ) ){
+		fNoImmediateDanger		= 0.49 ;
+	}
+	else fNoImmediateDanger		= 0.99;
+	
 	
 	SetLocalFloat( oCombatController, VAR_CDATA_DANGER, fNoImmediateDanger );
 	//PrettyDebug( "func::SetNoImmediateDanger:"+FloatToString(fNoImmediateDanger) );
@@ -379,6 +406,8 @@ float SetAreaKnowledge( object oCombatController){
 
 
 // Team Morale is determined by nDead / nMax team members
+// If 2 dead on 8 members, TM is 1-0.25 = 0.75
+// High is good for me, Low is bad for me
 float SetTeamMorale( object oCombatController){
 
 	int nDead 			= GetLocalInt( oCombatController, VAR_COUNT_DEAD );
@@ -386,15 +415,116 @@ float SetTeamMorale( object oCombatController){
 	float fTeamMorale 	= _safeDivide( IntToFloat( nDead ), IntToFloat( nAll ) );
 	SetLocalFloat( oCombatController, VAR_CDATA_MORALE, fTeamMorale);
 	//PrettyDebug( "func::SetTeamMorale:"+FloatToString(fTeamMorale) );
+	return 1.0;
 	return fTeamMorale;
 	 
 }
 
 // Checks each member of the team for its neighborhood to other team members.
 // Returns the math product of each fraction of team as a fraction is nSubTeam:nTotalTeam
+// In worst case scenario, it's a O((n-1)+(n-2)+...+ 1) algorithm
+// ie for a perfectly fractioned team of 10 => 45 loops
 float GetSubteamsFractions( object oCombatController ){
 
-	return 0.0;
+	int N 		= GetTeamCount( oCombatController );
+	// Single creature, no subteam
+	if( 1 == N ){
+		return 1.0;
+	}
+	//PrettyDebug( "func::GetSubteamsFractions:STARTED" );	 
+	int i				= 0; // Iterator index, incremented once per loop
+	int j				= 1; // Iterator index, incremented many per loop
+	int bPivInGroup		= 0; // group state for pivot
+	int bSatInGroup		= 0; // group state for satellite
+	int bPtsInGroup		= 0; // group state for pivot and satellite
+	int nGroupsId		= 1; // # of groups, at least one
+	int nPrevGroupsId	= 1; // # of group previously set in search 
+	// Make sure we get a clean new Storage for NPC index => GroupId
+	object oCi, oCj; // The creatures variables used throughout the search
+	object oT			= GetStorage( oCombatController, STORAGE_TEAM_MEMBERS ); // Team members
+	object oS   		= GetStorage( oCombatController, STORAGE_COMB_CONT_TMP ); // Parsed members
+	DestroyObject( oS );
+	CreateStorage( oCombatController, STORAGE_COMB_CONT_TMP );
+	
+	while( i < N ){
+		// If all the points have been checked, the search is over
+		if( N == GetStorageCount( oCombatController, STORAGE_COMB_CONT_TMP ) ){
+			//PrettyDebug( "func::GetSubteamsFractions:1st LOOP BREAK @"+IntToString(i) );	 
+			break;
+		}
+		// Get the pivot object
+		oCi					= GetVariableValueObject( oT, i );
+		bPivInGroup			= GetLocalInt( oS, IntToString( i ) );
+		// Run search
+		for( j = i+1; j < N; j++ ){
+			//PrettyDebug( "func::GetSubteamsFractions:2nd LOOP j="+IntToString(j) );	 
+		
+			// Is satellite in a group
+			bSatInGroup 	= GetLocalInt( oS, IntToString( j ) );
+			// If both pivot and satellite are in a previous group, continue
+			if( bPivInGroup && bSatInGroup ){
+				j++;
+				continue;
+			}
+			// Get the satellite 
+			oCj				= GetVariableValueObject( oT, j );
+			// Are pivot and satellite in same group
+			bPtsInGroup 	= GetDistanceBetween( oCi, oCj ) < PARAM_COMBAT_ZONE_CHUNK;
+			// If pivot and satellite are not in same group, continue
+			if( !bPtsInGroup ){
+				j++;
+				continue;
+			}
+			// If pivot and satellite aren't grouped, set group and record for each
+			if( !bPivInGroup && !bSatInGroup){
+				SetLocalInt( oS, IntToString(i), nGroupsId);
+				SetLocalInt( oS, IntToString(j), nGroupsId);
+				bPivInGroup	= TRUE;
+				nGroupsId++;
+				j++;
+				continue;
+			}
+			// If pivot point in group, add satellite to group
+			if( bPivInGroup && !bSatInGroup ){
+				nPrevGroupsId	= GetLocalInt( oS, IntToString(i) );
+				SetLocalInt( oS, IntToString(j), nPrevGroupsId);
+				j++;
+				continue;
+			}
+			// 	If satellite point in group, add pivot to group
+			if( !bPivInGroup && bSatInGroup ){
+				nPrevGroupsId	= GetLocalInt( oS, IntToString(j) );
+				SetLocalInt( oS, IntToString(i), nPrevGroupsId);
+				j++;
+				continue;
+			}
+		}
+		// If pivot has not been added to a group, create its own
+		if( !bPivInGroup ){
+			SetLocalInt( oS, IntToString(i), nGroupsId);
+			nGroupsId++;
+		}
+		i++;
+	}
+	// One group only ? no subteam
+	int nGroups 				= nGroupsId-1; 
+	if( nGroups == 1 ){
+		return 1.0;
+	}
+	// get a new temp storage to keep track of the creature per group decount
+	int nCount					= 0; // basic temp stoa
+	object oD					= CreateStorage( oCombatController, "Temporary" );
+	for( i=0; i<N; i++){
+		nGroupsId				= GetLocalInt( oS, IntToString(i));
+		SetLocalInt( oD, IntToString(nGroupsId), 1+ GetLocalInt( oD, IntToString(nGroupsId) ) );
+	}
+	float fDivider,fResult		= 1.0;
+	for( i=1; i<=nGroups; i++){
+		fDivider				= IntToFloat(GetLocalInt( oD, IntToString(i) )) / N;
+		fResult 				*= fDivider;
+	}
+	DestroyObject(oD); 
+	return fResult;
 
 }
 
@@ -403,18 +533,21 @@ float GetSubteamsFractions( object oCombatController ){
 // NOTE : eventually, this could be a static table for better perfs
 float SetPositionQuality( object oCombatController){
 	float fSubteamsFractions	= GetSubteamsFractions( oCombatController );
-	float fPositionQuality = sqrt( fSubteamsFractions );
+
+	float fPositionQuality 		= sqrt( fSubteamsFractions );
 	SetLocalFloat( oCombatController, VAR_CDATA_POSITION, fPositionQuality);
-	//PrettyDebug( "func::SetPositionQuality:"+FloatToString(fPositionQuality) );
+	PrettyDebug( "func::SetPositionQuality:"+FloatToString(fPositionQuality) );
 	return fPositionQuality;
 }
 
 // Enemy Threat is determined by divising teams "Round To Live" by enemy team RTL
 // my Rounds To Life is equal to my Hit Points divided by my enemies Damages per round
+// Ex: I have 4 rounds to live, enemy has 10, ET = 4/10 => 0.4
+// High is good for me, low is bad for me
 float SetEnemyThreat( object oCombatController){
-
+	
 	//PrettyDebug( "func::SetEnemyThreat:"+FloatToString(0.01) );
-	return 0.01;
+	return 10.00;
 	
 }
 
@@ -427,7 +560,7 @@ float SetEnemyThreat( object oCombatController){
 float GetStrategyExplore( object oCombatController, float f1, float f2 ){
 
 	float fRes = CapDivide( f1, f2, 3.0 );
-	//PrettyDebug( "func::GetStrategyExplore:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	PrettyDebug( "func::GetStrategyExplore:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 	
 }
@@ -435,28 +568,17 @@ float GetStrategyExplore( object oCombatController, float f1, float f2 ){
 float GetStrategyAmbush( object oCombatController, float f1, float f2 ){
 
 	float fRes = CapDivide( f1, f2, 3.0 );
-	//PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	PrettyDebug( "func::GetStrategyAmbush:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 }
 
 // fTeamMorale, fEnemyThreat 
 float GetStrategyTaunt( object oCombatController, float f1, float f2 ){
 
-	if( !GetEnemyCount(oCombatController) ){
+	if( !GetCombatControllerFlagPerceived(oCombatController) ){
 		return 0.0;}
 	float fRes = CapDivide( f1, f2, 6.0 );
-	//PrettyDebug( "func::GetStrategyTaunt:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
-	return fRes;
-	
-}
-
-// fEnemyThreat, fTeamMorale
-float GetStrategyFlee( object oCombatController, float f1, float f2 ){
-
-	if( !GetEnemyCount(oCombatController) ){
-		return 0.0;}
-	float fRes = CapDivide( f1, f2, 6.0 );
-	//PrettyDebug( "func::GetStrategyFlee:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	PrettyDebug( "func::GetStrategyTaunt:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 	
 }
@@ -464,10 +586,21 @@ float GetStrategyFlee( object oCombatController, float f1, float f2 ){
 // fEnemyThreat, fPositionQuality
 float GetStrategyReposition( object oCombatController, float f1, float f2 ){
 
-	if( !GetEnemyCount(oCombatController) ){
+	if( !GetCombatControllerFlagHarmed(oCombatController) ){
 		return 0.0;}
 	float fRes = CapDivide( f1, f2, 9.0 );
-	//PrettyDebug( "func::GetStrategyReposition:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	PrettyDebug( "func::GetStrategyReposition:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	return fRes;
+	
+}
+
+// fEnemyThreat, fTeamMorale
+float GetStrategyFlee( object oCombatController, float f1, float f2 ){
+
+	if( !GetCombatControllerFlagHarmed(oCombatController) ){
+		return 0.0;}
+	float fRes = CapDivide( f1, f2, 6.0 );
+	PrettyDebug( "func::GetStrategyFlee:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 	
 }
@@ -477,8 +610,10 @@ float GetStrategyAttack( object oCombatController, float f1, float f2 ){
 
 	if( !GetEnemyCount(oCombatController) ){
 		return 0.0;}
-	float fRes = CapDivide( f1, f2, 9.0 );
-	//PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+//	float fRes = CapDivide( f1, f2, 9.0 );
+//	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+	float fRes =  f1 * f2 * 9.0 ;
+	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"*"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 	
 }
@@ -574,7 +709,7 @@ int AssignTacticalGoal( string sStrategy, object oNPC ){
 
 	}else if( INVALID == sStrategy ){
 	
-		PrettyDebug( "AssignTacticalGoal::ERROR Invalid strategy" );
+		//PrettyDebug( "AssignTacticalGoal::ERROR Invalid strategy" );
 		return FALSE;
 	}
 	
@@ -1037,7 +1172,7 @@ int QualifyLocationDigPositionAmbush(object oWP, object oCombatController ){
 	//else PrettyDebug( "QualifyLocationDigPositionAmbush::Inferior Quality :"+FloatToString( fQuality ));
 	
 	// At this point, no changes, but we want to update current WP neighbours info accurate
-	PrettyDebug("QualifyLocationDigPositionAmbush::"+GetObjectUniqueId(oAmbushWP)+" Updating the WP");
+	//PrettyDebug("QualifyLocationDigPositionAmbush::"+GetObjectUniqueId(oAmbushWP)+" Updating the WP");
 	QualifyLocationDigPositionSurroundWP( oAmbushWP, oCombatController );
 	
 	return FALSE;
@@ -1092,7 +1227,7 @@ int QualifyLocationDigPositionSurroundWP(object oWP, object oCombatController ){
 	
 	float fQuality		= IntToFloat( nCount ) / 8;
 	//PrettyDebug( "QualifyLocationDigPositionSurroundWP::WP Quality :"+FloatToString( fQuality )); 
-	PrettyDebug( "QualifyLocationDigPositionSurroundWP::"+GetObjectUniqueId(oWP)+" Count :"+IntToString( nCount )); 
+	//PrettyDebug( "QualifyLocationDigPositionSurroundWP::"+GetObjectUniqueId(oWP)+" Count :"+IntToString( nCount )); 
 	SetLocalInt( oWP, VAR_COUNT_SURROUND_WP, nCount );
 	SetLocalFloat( oWP, VAR_QUALIFY_SURROUND_WP, fQuality );
 	return nCount;
@@ -1169,4 +1304,66 @@ int QualifyLocation( object oNPC, int bInitQualify = FALSE ){
 	
 }
 
+// ##############################
+// 
+// ##############################
+
+// Determines if a creature is already in combat
+int GetIsEnteredInCombat( object oNPC ){
+	
+	if( GetIsObjectValid(GetLocalObject( oNPC, VAR_OBJ_COMB_CONT ) ) ) {
+		return TRUE;	
+	}
+	return FALSE;
+	
+}
+
+// Determines if a creature is going to enter combat
+int GetIsEnteringCombat( object oNPC ){
+
+	return TRUE;
+
+}
+
+
+
+// ##############################
+// 
+// ##############################
+
+// Gets a flag on the controller : team attacked
+int	GetCombatControllerFlagHarmed( object oCombatController ){
+
+	return GetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_HARM );
+}
+
+// Gets a flag on the controller : enemy spoted
+int	GetCombatControllerFlagPerceived( object oCombatController ){
+
+	return GetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_PERC );
+
+}
+
+
+// Sets a flag on the controller : team attacked
+int	SetCombatControllerFlagHarmed( object oNPC ){
+
+	object oCombatController 		= GetCombatControllerProxy( oNPC );
+	if( !GetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_HARM ) ){
+		SetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_HARM, TRUE );
+		return TRUE;
+	}
+	return FALSE;
+}
+
+// Sets a flag on the controller : enemy spoted
+int	SetCombatControllerFlagPerceived( object oNPC ){
+
+	object oCombatController 		= GetCombatControllerProxy( oNPC );
+	if( !GetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_PERC ) ){
+		SetLocalInt( oCombatController, VAR_COMB_CONT_FLAG_PERC, TRUE );
+		return TRUE;
+	}
+	return FALSE;
+}
 // void main(){}
