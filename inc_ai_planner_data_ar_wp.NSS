@@ -74,7 +74,6 @@ object GetStorage(  object oObject, string sArrayId )
 {
 
 	string sUniqueId 	= GetObjectUniqueId( oObject );
-	//
 	object oA 			= GetObjectByTag( sUniqueId + sArrayId );
 	//
 	if( !GetIsObjectValid( oA ) )
@@ -83,6 +82,13 @@ object GetStorage(  object oObject, string sArrayId )
 		
 	return oA;
 	
+}
+
+int DestroyStorage( object oObject, string sArrayId ){
+
+	string sUniqueId 	= GetObjectUniqueId( oObject );
+	DestroyObject( GetObjectByTag( sUniqueId + sArrayId ) );  	
+	return FALSE;
 }
 
 // Used when you want to initiate an empty storage that was eventually previously instanced

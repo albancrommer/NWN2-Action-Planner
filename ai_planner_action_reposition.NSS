@@ -14,10 +14,24 @@
 
 
 
+// Returns a team 
+object GetPositionForReposition( object oNPC ){
+
+	object oCombatController 	= GetCombatControllerProxy( oNPC );
+	object oS					= GetStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	// Easy cut : return to first position
+	return GetVariableValueObject( oS, 0 );
+
+}
+
 // Main Loop
 void main(){
 
-	object oNPC 				= OBJECT_SELF;
+	object oNPC 		= OBJECT_SELF;
+	
+	object oWP			= GetPositionForReposition( oNPC );
+	
+	AssignCommand( oNPC, ActionForceMoveToObject( oWP, TRUE ) );
 
 
 }

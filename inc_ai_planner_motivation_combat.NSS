@@ -20,7 +20,7 @@ int QualifyLocationDigPositionSurroundWP(object oWP, object oCombatController );
 object GetCombatControllerProxy( object oNPC );
 int	GetCombatControllerFlagHarmed( object oCombatController );
 int	GetCombatControllerFlagPerceived( object oCombatController );
-
+int DestroyCombatController( object oCombatController );
 
 // **************************************************************
 // Utilities
@@ -117,6 +117,14 @@ int GetMaxExplorationReached( object oCombatController ){
 
 
 
+// Reads team count stored on controller
+int GetTeamCount( object oCombatController ){
+
+	int nTeamCount 	= GetStorageCount( oCombatController, STORAGE_TEAM_MEMBERS );
+	//PrettyDebug("GetTeamCount::nTeamCount="+IntToString(nTeamCount));
+	return nTeamCount;
+}
+
 // Reads the storage to retrieve the quantity of team members
 int SetTeamCount( object oCombatController ){
 
@@ -127,15 +135,13 @@ int SetTeamCount( object oCombatController ){
 }
 
 
-// Reads team count stored on controller
-int GetTeamCount( object oCombatController ){
 
-	int nTeamCount 	= GetStorageCount( oCombatController, STORAGE_TEAM_MEMBERS );
-	//PrettyDebug("GetTeamCount::nTeamCount="+IntToString(nTeamCount));
-	return nTeamCount;
+// Reads enemy count stored on controller
+int GetEnemyCount( object oCombatController){
+
+	return GetLocalInt( oCombatController, VAR_ENEMY_COUNT );
+	
 }
-
-
 // Reads the storage to retrieve the quantity of enemy members
 int SetEnemyCount( object oCombatController){
 	
@@ -145,12 +151,98 @@ int SetEnemyCount( object oCombatController){
 	
 }
 
-// Reads enemy count stored on controller
-int GetEnemyCount( object oCombatController){
+// Returns an arbitrary factor depending on the BAB
+float GetAttackFactor( int nBAB ){
 
-	return GetLocalInt( oCombatController, VAR_ENEMY_COUNT );
+	if( nBAB == 0 ){
+	
+		return		0.5;
+		
+	}
+	if( nBAB >= 26 ){
+	
+		return		4.0 + nBAB/20;
+		
+	}
+	switch( nBAB / 5 ){
+	
+	 	case 0: return 0.5;
+	 	case 1: return 1.0;
+	 	case 2: return 1.5;
+	 	case 3: return 2.25;
+	 	case 4: return 3.0;
+	 	case 5: return 4.0;
+	
+	}
+	return 0.1;
+}
+
+// Calculates the average amount of damage for a given creature
+// This could be a real challenge to do right... so 10% should be enough ;D
+int GetAverageDamage( object oNPC ){
+
+	if( !GetIsObjectValid( oNPC ) ) return 0;
+	
+	// Use cache when available
+	int nAverageDamage		= GetLocalInt( oNPC, VAR_AVERAGE_DAMAGE );
+	if( nAverageDamage ){
+		return nAverageDamage;
+	}
+	
+	int nBAB				= GetBaseAttackBonus( oNPC );
+	float fAttackFactor		= GetAttackFactor( nBAB );
+	int nLevel				= GetHitDice( oNPC );
+	
+	// This will be 1.0 for warriors, and close to 0.5 for casters
+	// 0.1 added to avoid 0 multiplier
+	// @see http://nwn2.wikia.com/wiki/Base_attack_bonus
+	//
+	float fDangerous		= ( nBAB == 0 ? 0.1 : IntToFloat(nLevel) / nBAB );
+	
+	// Let's say we deal an average of 3.5 per round
+	nAverageDamage			= FloatToInt( fAttackFactor*fDangerous*nLevel*3.5 );
+	SetLocalInt( oNPC, VAR_AVERAGE_DAMAGE, nAverageDamage );
+	PrettyDebug("GetAverageDamage::"+GetName(oNPC)+" deals "+IntToString( nAverageDamage )+" damage");
+	return nAverageDamage;
 	
 }
+
+// Defines team's Hitpoints and Damages per round
+int SetTeamCombatInfo( object oCombatController ){
+
+	int nCount 			= GetTeamCount( oCombatController );
+	object oS			= GetStorage( oCombatController, STORAGE_TEAM_MEMBERS );
+	object oNPC;
+	int nIterator, nTotalHP, nTotalDamage;
+	for( nIterator=nCount; nIterator>0; nIterator--){
+		oNPC			=  GetVariableValueObject( oS, nIterator );
+		nTotalHP		+= GetCurrentHitPoints(oNPC);
+		nTotalDamage	+= GetAverageDamage( oNPC );
+	}
+	SetLocalInt( oCombatController, VAR_COMB_CONT_DAM_TEAM, nTotalDamage );
+	SetLocalInt( oCombatController, VAR_COMB_CONT_HP_TEAM, nTotalHP );
+	return FALSE;	
+}
+
+
+// Defines enemy team's Hitpoints and Damages per round
+int SetEnemyCombatInfo( object oCombatController ){
+
+	int nCount 			= GetTeamCount( oCombatController );
+	object oS			= GetStorage( oCombatController, STORAGE_ENEMY_MEMBERS );
+	PrettyDump(oS);
+	object oNPC;
+	int nIterator, nTotalHP, nTotalDamage;
+	for( nIterator=nCount; nIterator>0; nIterator){
+		oNPC			=  GetVariableValueObject( oS, nIterator );
+		nTotalHP		+= GetCurrentHitPoints(oNPC);
+		nTotalDamage	+= GetAverageDamage( oNPC );
+	}
+	SetLocalInt( oCombatController, VAR_COMB_CONT_DAM_ENEMY, nTotalDamage );
+	SetLocalInt( oCombatController, VAR_COMB_CONT_HP_ENEMY, nTotalHP );
+	return FALSE;	
+}
+
 
 
 // Assigns faction to controller
@@ -170,14 +262,18 @@ int GetCombatControllerFaction( object oController ){
 
 // Performs calculations regarding the NPC team :
 // . Team count
+// . Team combat info
 int GetTeamData( object oCombatController ){
-
-	SetTeamCount( oCombatController );
+	// if empty team, destroy controller
+	if( !SetTeamCount( oCombatController ) ){
+		DestroyCombatController( oCombatController );
+	}
+	SetTeamCombatInfo( oCombatController );
 	return FALSE;
 
 }
 
-// Performs a high level search and sort of enemies data
+// Performs a high level "search and sort" of enemies data
 // Updates the enemy storage
 int UpdateEnemyScope( object oCombatController ){
 
@@ -185,10 +281,12 @@ int UpdateEnemyScope( object oCombatController ){
 	
 }
 
+
 // Performs calculations regarding the enemy team 
 // . Enemy Count
 int GetEnemyData( object oCombatController ){
 	
+	SetTeamCombatInfo( oCombatController );
 	UpdateEnemyScope( oCombatController );
 	SetEnemyCount( oCombatController );
 	return FALSE;
@@ -200,6 +298,13 @@ int GetEnemyData( object oCombatController ){
 // Controller basics : instancing, deleting, adding, removing
 // **************************************************************
 
+
+// Attemps to retrieve the locally stored combat controller
+object GetCombatControllerProxyCache( object oNPC ){
+
+	return GetLocalObject( oNPC, VAR_OBJ_COMB_CONT );
+	
+}
 
 
 // Adds PC to oNPC controller
@@ -247,10 +352,26 @@ int AddToCombatController( object oCombatController, object oNPC ){
 
 
 // Removes NPC from controller
-int RemoveFromCombatController( object oCombatController, object oNPC ){
+int RemoveFromCombatController( object oNPC ){
 
-	return TRUE;
+	object oCombatController = GetCombatControllerProxyCache( oNPC );
+	string sGUID				= GetObjectUniqueId( oNPC );
+	PrettyDebug("RemoveFromCombatController::Removing "+sGUID+":"+GetName( oNPC) );
+	return DeleteStorageLocalObject( oCombatController, STORAGE_TEAM_MEMBERS, sGUID );
 
+}
+
+
+// Destroys object and all its storages
+int DestroyCombatController( object oCombatController ){
+	
+	DestroyStorage( oCombatController, STORAGE_COMBAT_STRATEGIES );
+	DestroyStorage( oCombatController, STORAGE_TEAM_MEMBERS );
+	DestroyStorage( oCombatController, STORAGE_ENEMY_MEMBERS );
+	DestroyStorage( oCombatController, STORAGE_COMB_CONT_TMP );
+	DestroyStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	DestroyObject( oCombatController, 0.1f );
+	return FALSE;
 }
 
 
@@ -293,7 +414,8 @@ object GetCombatControllerProxy( object oNPC ){
 
 	// Check if bind exists on NPC for a combat controller
 	// AND if they're (still) in the same area
-	oCombatController = GetLocalObject( oNPC, VAR_OBJ_COMB_CONT );
+	oCombatController 	= GetCombatControllerProxyCache( oNPC );
+	
 	if( GetIsObjectValid( oCombatController ) && GetArea( oNPC ) == GetArea( oCombatController ) ){
 		//PrettyDebug( ObjectToString(oNPC)+"::GetCombatControllerProxy::Returned binded controller");
 		AddToCombatController( oCombatController, oNPC ); 
@@ -535,19 +657,34 @@ float SetPositionQuality( object oCombatController){
 	float fSubteamsFractions	= GetSubteamsFractions( oCombatController );
 
 	float fPositionQuality 		= sqrt( fSubteamsFractions );
+	if( fPositionQuality < 0.01 ) {
+		fPositionQuality		= 0.01;
+	}
 	SetLocalFloat( oCombatController, VAR_CDATA_POSITION, fPositionQuality);
 	PrettyDebug( "func::SetPositionQuality:"+FloatToString(fPositionQuality) );
 	return fPositionQuality;
 }
 
-// Enemy Threat is determined by divising teams "Round To Live" by enemy team RTL
-// my Rounds To Life is equal to my Hit Points divided by my enemies Damages per round
-// Ex: I have 4 rounds to live, enemy has 10, ET = 4/10 => 0.4
-// High is good for me, low is bad for me
+// Enemy Threat is determined by divising enemy team "Round To Live" 
+// by the sum of the enemy and the current team "Rounds To Live" 
+// Rounds To Live is equal to sum of "Hit Points" divided by the opposite sum of "Damages per round"
+// Ex: I have 4 rounds to live, enemy has 10 / Enemy Threat equals 10/14 => 0.714
+// High is bad for me, low is good for me
 float SetEnemyThreat( object oCombatController){
+
+	int nTeamHitPoints			= GetLocalInt( oCombatController, VAR_COMB_CONT_HP_TEAM);
+	int nTeamDamagePerRound		= GetLocalInt( oCombatController, VAR_COMB_CONT_DAM_TEAM);
+	int nEnemyHitPoints			= GetLocalInt( oCombatController, VAR_COMB_CONT_HP_ENEMY);
+	int nEnemyDamagePerRound	= GetLocalInt( oCombatController, VAR_COMB_CONT_DAM_ENEMY);
+	int nTeamRTL				= ( nEnemyDamagePerRound == 0 ? 1 : 1 + nTeamHitPoints / nEnemyDamagePerRound );
+	int nEnemyRTL				= ( nTeamDamagePerRound == 0 ? 1 : 1 + nEnemyHitPoints / nTeamDamagePerRound );
+	int nTotalRTL				= nTeamRTL + nEnemyRTL;
+	float fResult 				= IntToFloat(nEnemyRTL) / nTotalRTL;
 	
+	PrettyDebug( "func::SetEnemyThreat:"+IntToString(nEnemyRTL)+"/("+IntToString(nTotalRTL) );
+		// float fResult 				= 0.5;
 	//PrettyDebug( "func::SetEnemyThreat:"+FloatToString(0.01) );
-	return 10.00;
+	return fResult;
 	
 }
 
@@ -609,11 +746,12 @@ float GetStrategyFlee( object oCombatController, float f1, float f2 ){
 float GetStrategyAttack( object oCombatController, float f1, float f2 ){
 
 	if( !GetEnemyCount(oCombatController) ){
+		PrettyDebug( "func::GetStrategyAttack: NO ENEMY" );
 		return 0.0;}
-//	float fRes = CapDivide( f1, f2, 9.0 );
-//	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
-	float fRes =  f1 * f2 * 9.0 ;
-	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"*"+FloatToString(f2)+"="+FloatToString(fRes) );
+	float fRes = CapDivide( f1 * 3, f2, 9.0 );
+	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"/"+FloatToString(f2)+"="+FloatToString(fRes) );
+//	float fRes =  f1 * f2 * 9.0 ;
+//	PrettyDebug( "func::GetStrategyAttack:"+FloatToString(f1)+"*"+FloatToString(f2)+"="+FloatToString(fRes) );
 	return fRes;
 	
 }
@@ -1366,4 +1504,148 @@ int	SetCombatControllerFlagPerceived( object oNPC ){
 	}
 	return FALSE;
 }
+
+
+
+
+
+
+// returns FALSE if the combat controller has no ambush role member
+int GetCombatControllerHasRoleAmbush( object oNPC ){
+
+	object oCombatController 	= GetCombatControllerProxy( oNPC );
+	return GetLocalInt( oCombatController, VAR_HAS_ROLE_AMBUSH );
+
+}
+
+
+// 
+// returns FALSE if oNPC has no ambushing skills
+// Cached data : -1 => No ability / >1 => Has Ability
+int GetHasRoleAmbush( object oNPC ){
+
+	// Check cached value first
+	int nHasRole 		= GetLocalInt( oNPC, VAR_HAS_ROLE_AMBUSH );
+	if( -1 == nHasRole ){return FALSE;}
+	if( 0 < nHasRole ) {return TRUE;}
+	
+	
+	// Perform checks and cache the result
+	nHasRole 			+= GetHasFeat( FEAT_SNEAK_ATTACK, oNPC, TRUE );
+	nHasRole 			+= GetSkillRank( SKILL_HIDE, oNPC ) > 10 ;
+	
+	// Has Role
+	if( 0 < nHasRole ){
+	PrettyDebug( "GetHasRoleAmbush::Is ambusher "+GetName( oNPC ) );
+		object oCombatController 	= GetCombatControllerProxy( oNPC );
+		SetLocalInt( oCombatController, VAR_HAS_ROLE_AMBUSH, TRUE );
+		SetLocalInt( oNPC, VAR_HAS_ROLE_AMBUSH, TRUE );
+	 	return TRUE;
+	}
+	
+	// Has not
+	SetLocalInt( oNPC, VAR_HAS_ROLE_AMBUSH, -1 );
+	return FALSE;
+
+}
+
+
+
+// returns FALSE if oNPC has no casting skills
+// Cached data : -1 => No ability / >1 => Has Ability
+int GetHasRoleCaster( object oNPC ){
+
+	// Check cached value first
+	int nHasRole 		= GetLocalInt( oNPC, VAR_HAS_ROLE_CASTER );
+	if( -1 == nHasRole ){return FALSE;}
+	if( 0 < nHasRole ) {return TRUE;}
+	
+	// Perform checks and cache the result
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_WIZARD, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_SORCERER, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_ARCANE_SCHOLAR, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_ELDRITCH_KNIGHT, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_HELLFIRE_WARLOCK, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_PALEMASTER, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_RED_WIZARD, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_WARLOCK, oNPC );
+	
+	// Has Role
+	if( 0 < nHasRole ){
+	PrettyDebug( "GetHasRoleCaster::Is caster "+GetName( oNPC ) );
+		object oCombatController 	= GetCombatControllerProxy( oNPC );
+		SetLocalInt( oCombatController, VAR_HAS_ROLE_CASTER, TRUE );
+		SetLocalInt( oNPC, VAR_HAS_ROLE_CASTER, TRUE );
+	 	return TRUE;
+	}
+	
+	// Has not
+	SetLocalInt( oNPC, VAR_HAS_ROLE_CASTER, -1 );
+	return FALSE;
+}
+// returns FALSE if oNPC has no buffing skills
+// Cached data : -1 => No ability / >1 => Has Ability
+int GetHasRoleBuffer( object oNPC ){
+	
+	// Check cached value first
+	int nHasRole 		= GetLocalInt( oNPC, VAR_HAS_ROLE_BUFFER );
+	if( -1 == nHasRole ){return FALSE;}
+	if( 0 < nHasRole ) {return TRUE;}
+	
+	// Perform checks and cache the result
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_BARD, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_CLERIC, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_DRUID, oNPC );
+	nHasRole 			+= GetLevelByClass( CLASS_TYPE_ELEMENTAL, oNPC );
+
+	
+	// Has Role
+	if( 0 < nHasRole ){
+	PrettyDebug( "GetHasRoleBuffer::Is buffer "+GetName( oNPC ) );
+		object oCombatController 	= GetCombatControllerProxy( oNPC );
+		SetLocalInt( oCombatController, VAR_HAS_ROLE_BUFFER, TRUE );
+		SetLocalInt( oNPC, VAR_HAS_ROLE_BUFFER, TRUE );
+	 	return TRUE;
+	}
+	
+	// Has not
+	SetLocalInt( oNPC, VAR_HAS_ROLE_BUFFER, -1 );
+	return FALSE;
+
+}
+
+
+// returns FALSE if oNPC has no ranged skills
+// Cached data : -1 => No ability / >1 => Has Ability
+int GetHasRoleRanged( object oNPC ){
+
+	// Check cached value first
+	int nHasRole 		= GetLocalInt( oNPC, VAR_HAS_ROLE_RANGED );
+	if( -1 == nHasRole ){return FALSE;}
+	if( 0 < nHasRole ) {return TRUE;}
+	
+	// Perform checks and cache the result
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_DART, oNPC );
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_LIGHT_CROSSBOW, oNPC );
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_LONGBOW, oNPC );
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_SHORTBOW, oNPC );
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_SHURIKEN, oNPC );
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_SLING, oNPC );
+		nHasRole 			+= GetHasFeat( FEAT_WEAPON_FOCUS_THROWING_AXE, oNPC );
+		nHasRole 			+= GetHasFeat( CLASS_TYPE_WARLOCK, oNPC );
+	// Has Role
+	if( 0 < nHasRole ){
+	PrettyDebug( "GetHasRoleRanged::Is ranged "+GetName( oNPC ) );
+		object oCombatController 	= GetCombatControllerProxy( oNPC );
+		SetLocalInt( oCombatController, VAR_HAS_ROLE_RANGED, TRUE );
+		SetLocalInt( oNPC, VAR_HAS_ROLE_RANGED, TRUE );
+	 	return TRUE;
+	}
+	
+	// Has not
+	SetLocalInt( oNPC, VAR_HAS_ROLE_RANGED, -1 );
+	return FALSE;
+}
+
+
 // void main(){}

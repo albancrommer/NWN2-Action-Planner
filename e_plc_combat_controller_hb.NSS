@@ -22,4 +22,5 @@ void main()
 	object oAmbushWP			= GetLocalObject( oCombatController, VAR_QUALIFY_AMBUSH_WP );
 	PrettyDebugObjectLocation( oRangedWP, "blue");
 	PrettyDebugObjectLocation( oAmbushWP, "orange");
+	
 }
