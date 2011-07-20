@@ -199,8 +199,8 @@ int GetAverageDamage( object oNPC ){
 	//
 	float fDangerous		= ( nBAB == 0 ? 0.1 : IntToFloat(nLevel) / nBAB );
 	
-	// Let's say we deal an average of 3.5 per round
-	nAverageDamage			= FloatToInt( fAttackFactor*fDangerous*nLevel*3.5 );
+	// Let's say we deal a minimum damage of 2*level per round
+	nAverageDamage			= FloatToInt( fAttackFactor*fDangerous*nLevel*2 );
 	SetLocalInt( oNPC, VAR_AVERAGE_DAMAGE, nAverageDamage );
 	PrettyDebug("GetAverageDamage::"+GetName(oNPC)+" deals "+IntToString( nAverageDamage )+" damage");
 	return nAverageDamage;
@@ -214,11 +214,12 @@ int SetTeamCombatInfo( object oCombatController ){
 	object oS			= GetStorage( oCombatController, STORAGE_TEAM_MEMBERS );
 	object oNPC;
 	int nIterator, nTotalHP, nTotalDamage;
-	for( nIterator=nCount; nIterator>0; nIterator--){
+	for( nIterator=nCount-1; nIterator>=0; nIterator--){
 		oNPC			=  GetVariableValueObject( oS, nIterator );
 		nTotalHP		+= GetCurrentHitPoints(oNPC);
 		nTotalDamage	+= GetAverageDamage( oNPC );
 	}
+	PrettyDebug("SetTeamCombatInfo::nTotalDamage="+IntToString(nTotalDamage)+" nTotalHP"+IntToString(nTotalHP));
 	SetLocalInt( oCombatController, VAR_COMB_CONT_DAM_TEAM, nTotalDamage );
 	SetLocalInt( oCombatController, VAR_COMB_CONT_HP_TEAM, nTotalHP );
 	return FALSE;	
@@ -228,18 +229,18 @@ int SetTeamCombatInfo( object oCombatController ){
 // Defines enemy team's Hitpoints and Damages per round
 int SetEnemyCombatInfo( object oCombatController ){
 
-	PrettyDebug("SetEnemyCombatInfo::FIRED");
 	int nCount 			= GetEnemyCount( oCombatController );
 	object oS			= GetStorage( oCombatController, STORAGE_ENEMY_MEMBERS );
 	PrettyDump(oS);
 	object oNPC;
 	int nIterator, nTotalHP, nTotalDamage;
-	for( nIterator=nCount; nIterator>0; nIterator--){
-		PrettyDebug("SetEnemyCombatInfo::enemy #"+IntToString(nIterator));
+	for( nIterator=nCount-1; nIterator>=0; nIterator--){
 		oNPC			=  GetVariableValueObject( oS, nIterator );
+		PrettyDebug("SetEnemyCombatInfo::nIterator="+IntToString(nIterator)+" Enemy="+GetTag(oNPC));
 		nTotalHP		+= GetCurrentHitPoints(oNPC);
 		nTotalDamage	+= GetAverageDamage( oNPC );
 	}
+	PrettyDebug("SetEnemyCombatInfo::nTotalDamage="+IntToString(nTotalDamage)+" nTotalHP"+IntToString(nTotalHP));
 	SetLocalInt( oCombatController, VAR_COMB_CONT_DAM_ENEMY, nTotalDamage );
 	SetLocalInt( oCombatController, VAR_COMB_CONT_HP_ENEMY, nTotalHP );
 	return FALSE;	
@@ -689,7 +690,7 @@ float SetEnemyThreat( object oCombatController){
 	int nTotalRTL				= nTeamRTL + nEnemyRTL;
 	float fResult 				= IntToFloat(nEnemyRTL) / nTotalRTL;
 	
-	PrettyDebug( "func::SetEnemyThreat:"+IntToString(nEnemyRTL)+"/("+IntToString(nTotalRTL) );
+	PrettyDebug( "func::SetEnemyThreat:"+IntToString(nEnemyRTL)+"/"+IntToString(nTotalRTL) );
 		// float fResult 				= 0.5;
 	//PrettyDebug( "func::SetEnemyThreat:"+FloatToString(0.01) );
 	return fResult;
