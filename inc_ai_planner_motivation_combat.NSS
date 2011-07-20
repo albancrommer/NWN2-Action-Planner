@@ -228,12 +228,14 @@ int SetTeamCombatInfo( object oCombatController ){
 // Defines enemy team's Hitpoints and Damages per round
 int SetEnemyCombatInfo( object oCombatController ){
 
-	int nCount 			= GetTeamCount( oCombatController );
+	PrettyDebug("SetEnemyCombatInfo::FIRED");
+	int nCount 			= GetEnemyCount( oCombatController );
 	object oS			= GetStorage( oCombatController, STORAGE_ENEMY_MEMBERS );
 	PrettyDump(oS);
 	object oNPC;
 	int nIterator, nTotalHP, nTotalDamage;
-	for( nIterator=nCount; nIterator>0; nIterator){
+	for( nIterator=nCount; nIterator>0; nIterator--){
+		PrettyDebug("SetEnemyCombatInfo::enemy #"+IntToString(nIterator));
 		oNPC			=  GetVariableValueObject( oS, nIterator );
 		nTotalHP		+= GetCurrentHitPoints(oNPC);
 		nTotalDamage	+= GetAverageDamage( oNPC );
@@ -264,6 +266,7 @@ int GetCombatControllerFaction( object oController ){
 // . Team count
 // . Team combat info
 int GetTeamData( object oCombatController ){
+
 	// if empty team, destroy controller
 	if( !SetTeamCount( oCombatController ) ){
 		DestroyCombatController( oCombatController );
@@ -286,10 +289,15 @@ int UpdateEnemyScope( object oCombatController ){
 // . Enemy Count
 int GetEnemyData( object oCombatController ){
 	
-	SetTeamCombatInfo( oCombatController );
+	PrettyDebug("GetEnemyData::FIRED");
+	if(!SetEnemyCount( oCombatController )){
+		PrettyDebug("GetEnemyData::RETURNED");
+		return FALSE;
+	}
+	SetEnemyCombatInfo( oCombatController );
 	UpdateEnemyScope( oCombatController );
-	SetEnemyCount( oCombatController );
-	return FALSE;
+	PrettyDebug("GetEnemyData::ENDED");
+	return TRUE;
 
 }
 
@@ -778,7 +786,7 @@ int RunControllerLoop( object oCombatController ){
 	GetEnemyData(oCombatController );
 	
 	// These methods are used to compute the team strategy
-	float fNoImmediateDanger 		= SetNoImmediateDanger(oCombatController); 
+	float fNoImmediateDanger 	= SetNoImmediateDanger(oCombatController); 
 	float fEnemyThreat 			= SetEnemyThreat(oCombatController);
 	float fPositionQuality 		= SetPositionQuality(oCombatController);
 	float fTeamMorale			= SetTeamMorale(oCombatController);
