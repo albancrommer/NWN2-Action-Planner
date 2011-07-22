@@ -18,6 +18,7 @@ const int		PARAM_MAX_ROUNDS_BLOCKED	= 2; // # of rounds an NPC is allowed to sta
 const int		PARAM_MAX_EXPLORATION		= 100; // # of times a team will try to qualify points on an area
 const int		PARAM_WALKLINE_DEPTH		= 3; // # of iterations used to detect invalid locations
 const float 	PARAM_CLOSE_ENOUGH			= 1.0; // Iterated distance to detect invalid locations 
+const float 	PARAM_PERCEPTION_DISTANCE	= 40.0; // Iterated distance to detect invalid locations 
 
 const float 	MOTIVATIONS_LIMIT_VAL		= 10.0;
 
@@ -49,10 +50,13 @@ const string 	STORAGE_COMBAT_STRATEGIES 	= "STORAGE_COMBAT_STRATEGIES";
 const string 	STORAGE_ENEMY_MEMBERS 		= "STORAGE_ENEMY_MEMBERS";
 const string 	STORAGE_EXPLORE_WAYPOINTS 	= "STORAGE_EXPLORE_WAYPOINTS";
 const string 	STORAGE_TEAM_MEMBERS 		= "STORAGE_TEAM_MEMBERS";
+const string 	STORAGE_COMB_CONT_GROUPS 	= "STORAGE_COMB_CONT_GROUPS"; // Stores the amount of NPCs per subgroup
 const string 	TAG_COMBAT_CONTROLLER		= "ai_planner_combat_controller";
 const string 	TAG_DEFAULT_WP				= "nw_waypoint001";
 const string 	TAG_EXPLORE_WAYPOINT		= "ai_planner_explore_wp";
 const string 	TAG_FORCED_COMBAT_WP		= "ai_planner_forced_combat";
+const string 	SCRIPT_ATTACK				= "ai_planner_action_attack";
+
 const string 	TARGET	 					= "TARGET";
 const string 	TASKS_ARRAY	 				= "TASKS_ARRAY";
 const string 	TASKS_STORAGE 				= "TASKS_STORAGE";
@@ -70,6 +74,7 @@ const string 	VAR_COMB_CONT_DAM_TEAM 		= "VAR_COMB_CONT_DAM_TEAM";
 const string 	VAR_COMB_CONT_DFLT_LOC		= "VAR_COMB_CONT_DFLT_LOC"; // The default Location ie. first WP of Combat Controller
 const string 	VAR_COMB_CONT_FLAG_HARM 	= "VAR_COMB_CONT_FLAG_HARM";
 const string 	VAR_COMB_CONT_FLAG_PERC 	= "VAR_COMB_CONT_FLAG_PERC";
+
 const string 	VAR_COMB_CONT_HEIGHT_MAX 	= "VAR_COMB_CONT_HEIGHT_MAX";
 const string 	VAR_COMB_CONT_HEIGHT_MIN 	= "VAR_COMB_CONT_HEIGHT_MIN";
 const string 	VAR_COMB_CONT_HP_ENEMY 		= "VAR_COMB_CONT_HP_ENEMY";
@@ -92,6 +97,7 @@ const string 	VAR_HAS_ROLE_AMBUSH			= "VAR_HAS_ROLE_AMBUSH";
 const string 	VAR_HAS_ROLE_BUFFER			= "VAR_HAS_ROLE_BUFFER";
 const string 	VAR_HAS_ROLE_CASTER			= "VAR_HAS_ROLE_CASTER";
 const string 	VAR_HAS_ROLE_RANGED			= "VAR_HAS_ROLE_RANGED";
+const string 	VAR_MAIN_GROUP_LOCATION 	= "VAR_MAIN_GROUP_LOCATION";
 const string 	VAR_MOVEMENT_DESTINATION 	= "VAR_MOVEMENT_DESTINATION";
 const string 	VAR_NTH_EXPLORATION			= "VAR_NTH_EXPLORATION"; // The combat controller quantity of exploration attempts
 const string 	VAR_OBJ_COMB_CONT			= "VAR_OBJ_COMB_CONT"; // The combat controller var on each NPC
@@ -110,4 +116,3 @@ const string 	VAR_STRATEGY_REPOSITION		= "VAR_STRATEGY_REPOSITION";
 const string 	VAR_STRATEGY_TAUNT	 		= "VAR_STRATEGY_TAUNT";
 const string 	VAR_TEAM_COUNT				= "VAR_TEAM_COUNT";
 const string 	WORLDSTATE	 				= "WORLDSTATE";
-

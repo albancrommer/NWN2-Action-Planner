@@ -197,6 +197,20 @@ float GetStorageFloatAtIndex( object oObject, string sArrayId, int nIndex ) {
 
 
 
+
+
+float GetStorageLastValueFloat( object oObject, string sArrayId ){
+
+	object oA 			= GetStorage( oObject, sArrayId );
+	//	
+	int nLast 			= GetVariableCount( oA ) - 1 ;
+	//
+	return GetVariableValueFloat( oA, nLast );
+
+}
+
+
+
 string GetStorageLastValueString( object oObject, string sArrayId ){
 
 	object oA 			= GetStorage( oObject, sArrayId );
@@ -220,16 +234,6 @@ string GetStorageLastValueString( object oObject, string sArrayId ){
 
 }
 
-
-float GetStorageLastValueFloat( object oObject, string sArrayId ){
-
-	object oA 			= GetStorage( oObject, sArrayId );
-	//	
-	int nLast 			= GetVariableCount( oA ) - 1 ;
-	//
-	return GetVariableValueFloat( oA, nLast );
-
-}
 
 string GetStorageLastVarName( object oObject, string sArrayId ) {
 
@@ -361,6 +365,39 @@ int SortStorageFloat( object oObject, string sArrayId ){
 
 }
 
+// Sort an integer list / array / storage
+// Certainly not the most efficient algo around but it works
+int SortStorageInt(  object oObject, string sArrayId ){
+
+	int nSorted = FALSE;
+	object oA 			= GetStorage( oObject, sArrayId );
+	if( !GetIsObjectValid( oA ) ) return FALSE;
+	
+	int nCount = GetVariableCount( oA );
+	int i;
+	int nT;
+	string sT;
+	while( FALSE == nSorted ){
+		
+		nSorted = TRUE;
+		for( i = 0; i < nCount - 1 ; i++){
+			
+			if( GetVariableValueInt( oA, i ) > GetVariableValueInt( oA, i + 1 ) ) {
+				
+				nT = GetVariableValueInt( oA, i );
+				sT = GetVariableName( oA, i );
+				DeleteLocalInt( oA, sT );
+				SetLocalInt( oA, sT, nT );
+				nSorted = FALSE;
+			
+			}
+		}
+	}
+//PrettyDebug( "///// Array after sort ///// " );
+//PrettyDump( oA);	
+	return TRUE;
+
+}
 
 int UpdateStorageFloat( object oObject, string sArrayId, string sVar, float fValue ){
 

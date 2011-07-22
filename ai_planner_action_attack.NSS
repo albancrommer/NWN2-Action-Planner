@@ -20,11 +20,10 @@ void main() {
 		if( TalentBardSong() ) { PrettyDebug(" TalentBardSong "); return; }
 		if( TalentCureCondition() ) { PrettyDebug(" TalentCureCondition "); return; }
 		if( TalentHeal() ) { PrettyDebug(" TalentHeal "); return; }
-		/*
-		*/
 		if( TalentUseProtectionOthers() ) { PrettyDebug(" TalentUseProtectionOthers 1"); return; }
 		if( TalentEnhanceOthers() ) { PrettyDebug(" TalentEnhanceOthers "); return; }
 		if( TalentDebuff( oAttackee ) ) { PrettyDebug(" TalentDebuff "); return; }
+		if( TalentSeeInvisible() ) { PrettyDebug(" TalentSeeInvisible "); return; }
 		if( TalentBuffSelf( ) ) { PrettyDebug(" TalentDebuff "); return; }
 	}
 //	else
@@ -32,7 +31,7 @@ void main() {
 		if( TalentHealingSelf() ) { PrettyDebug(" TalentHealingSelf "); return; }
 		if( TalentSummonAllies() ) { PrettyDebug(" TalentSummonAllies "); return; }
 		if( TalentSpellAttack( oAttackee ) ) { PrettyDebug(" TalentSpellAttack 1"); return; }
-		// if( TalentSeeInvisible() ) { PrettyDebug(" TalentSeeInvisible "); return; }
+		if( TalentSeeInvisible() ) { PrettyDebug(" TalentSeeInvisible "); return; }
 		if( TalentOthers(100, oAttackee) ) { PrettyDebug(" TalentOthers "); return; }
 		if( TalentUseProtectionOthers() ) { PrettyDebug(" TalentUseProtectionOthers "); return; }
 		if( TalentEnhanceOthers() ) { PrettyDebug(" TalentEnhanceOthers "); return; }
@@ -45,7 +44,7 @@ void main() {
 	{
 		AssignCommand( oNPC, ActionEquipMostDamagingMelee() );
 	}
-	
+	AssignCommand( oNPC, ActionForceMoveToObject( oAttackee, TRUE ) );
 	AssignCommand( oNPC, ActionAttack( oAttackee ) );
 
 }

@@ -3,6 +3,7 @@
 
 void main()
 {
+/*
 	object oNPC					= OBJECT_SELF;
 	object oPerceived			= GetLastPerceived();
 
@@ -15,7 +16,7 @@ void main()
 	if( GetIsEnteredInCombat( oNPC ) ){
 		SetCombatControllerFlagPerceived( oNPC);
 		AddToCombatControllerEnemy( oNPC, oPerceived );
-		PrettyDebug( "{PERCEPTION}:"+GetName( oNPC)+" added "+GetName( oPerceived )+" to list" );
+		// PrettyDebug( "{PERCEPTION}:"+GetName( oNPC)+" added "+GetName( oPerceived )+" to list" );
 		return;
 	
 	}
@@ -25,7 +26,7 @@ void main()
 		AddToCombatControllerEnemy( oNPC, oPerceived );
 	
 	}
-	
+	*/
 	
 }
 

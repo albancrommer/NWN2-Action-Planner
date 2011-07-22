@@ -1,4 +1,4 @@
-// ai_planner_action_explore
+// ai_planner_action_reposition
 /*
 	Description: Takes care of the NPC as a team exploration of the area
 	
@@ -15,12 +15,19 @@
 
 
 // Returns a team 
-object GetPositionForReposition( object oNPC ){
+location GetPositionForReposition( object oNPC ){
 
 	object oCombatController 	= GetCombatControllerProxy( oNPC );
-	object oS					= GetStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	location lLoc 				= GetLocalLocation( oCombatController, VAR_MAIN_GROUP_LOCATION );
+	if( GetIsLocationValid( lLoc ) ){
+		//PrettyDebug( "(ai_planner_action_reposition)Returning Main Team Location");
+		return lLoc;
+	}
+		
 	// Easy cut : return to first position
-	return GetVariableValueObject( oS, 0 );
+	//PrettyDebug( "(ai_planner_action_reposition)Returning Default position");
+	object oS					= GetStorage( oCombatController, STORAGE_EXPLORE_WAYPOINTS );
+	return GetLocation( GetVariableValueObject( oS, 0 ) );
 
 }
 
@@ -29,9 +36,9 @@ void main(){
 
 	object oNPC 		= OBJECT_SELF;
 	
-	object oWP			= GetPositionForReposition( oNPC );
+	location lLoc		= GetPositionForReposition( oNPC );
 	
-	AssignCommand( oNPC, ActionForceMoveToObject( oWP, TRUE ) );
+	AssignCommand( oNPC, ActionMoveToLocationEnhanced( oNPC, lLoc, TRUE ) );
 
 
 }

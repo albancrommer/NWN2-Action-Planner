@@ -2,14 +2,23 @@
 
 
 
-int ActionMoveToLocationEnhanced( object oNPC, object oTarget = OBJECT_INVALID, int bRun = FALSE ) {
+void ActionMoveToObjectEnhanced( object oNPC, object oTarget = OBJECT_INVALID, int bRun = FALSE ) {
 
 	location lDest 		= GetLocation( oTarget );
 	object oWP 			= CreateObject( OBJECT_TYPE_WAYPOINT, TAG_DEFAULT_WP, lDest, FALSE );
 	AssignCommand( oNPC, ActionForceMoveToObject( oWP, TRUE ) );
 	DestroyObject( oWP, 6.5);
 	// PrettyDebug("() ActionMoveToLocationEnhanced : " + GetName( oNPC ) );
-	return TRUE;
+
+}
+
+
+void ActionMoveToLocationEnhanced( object oNPC, location lDest, int bRun = FALSE ) {
+
+	object oWP 			= CreateObject( OBJECT_TYPE_WAYPOINT, TAG_DEFAULT_WP, lDest, FALSE );
+	AssignCommand( oNPC, ActionForceMoveToObject( oWP, TRUE ) );
+	DestroyObject( oWP, 6.5);
+	// PrettyDebug("() ActionMoveToLocationEnhanced : " + GetName( oNPC ) );
 
 }
 

@@ -16,13 +16,10 @@ void main()
 //PrettyDebug( "##### NEW NPC HEARTBEAT : " + ObjectToString( oNPC  )  );
 //PrettyDump( oNPC ) ;
 //PrettyDebug( "FATIGUE : " + FloatToString( GetFatigue( oNPC ) ) + " HUNGER : " + FloatToString( GetHunger( oNPC ) ) );
-
+	AssignCommand(  oNPC, ClearAllActions( TRUE ) );
 	UpdateNPC( oNPC );
-	//
 	UpdateWorldState( oNPC );
-	//
 	GetMotivation( oNPC );
-	// 
 	if( GetPlan( oNPC ) ){ 
 		// 
 		if( ! ExecutePlan( oNPC ) ){
@@ -34,7 +31,7 @@ void main()
 	} else{
 	
 		PrettyDump( GetObjectByTag( TASKS_ARRAY ) );
-		PrettyDump(GetStorage( oNPC, GOALS_ARRAY ) );
+		PrettyDump( GetStorage( oNPC, GOALS_ARRAY ) );
 	 	PrettyDebug( GetTag(oNPC) + " has no valid plan" );
 	}
 }
